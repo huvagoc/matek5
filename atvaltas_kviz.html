@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, interactive-widget=resizes-content">
+<title>Átváltás-kvíz</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:       #f5f3ee;
+    --surface:  #ffffff;
+    --border:   #e0ddd5;
+    --text:     #1a1916;
+    --muted:    #7a7870;
+    --accent:   #2d6a4f;
+    --accent-bg:#e8f4ef;
+    --ok:       #166534;
+    --ok-bg:    #dcfce7;
+    --ok-bd:    #bbf7d0;
+    --err:      #991b1b;
+    --err-bg:   #fee2e2;
+    --err-bd:   #fecaca;
+    --radius:   12px;
+    --font:     -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  }
+
+  html, body { height: 100%; }
+
+  body {
+    font-family: var(--font);
+    background: var(--bg);
+    color: var(--text);
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 1.25rem 1rem;
+  }
+
+  .shell { width: 100%; max-width: 440px; }
+
+  .screen { display: none; flex-direction: column; gap: .85rem; }
+  .screen.active { display: flex; }
+
+  /* Settings */
+  .app-title { font-size: 22px; font-weight: 600; letter-spacing: -.3px; }
+  .app-sub   { font-size: 14px; color: var(--muted); margin-top: .2rem; margin-bottom: .4rem; }
+
+  .cat-btn {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 13px 16px;
+    background: var(--surface); border: 1.5px solid var(--border);
+    border-radius: var(--radius); cursor: pointer;
+    font-size: 15px; font-family: var(--font); color: var(--text);
+    transition: border-color .15s, background .15s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .cat-btn.on { background: var(--accent-bg); border-color: var(--accent); color: var(--accent); font-weight: 500; }
+
+  .info-row { font-size: 13px; color: var(--muted); line-height: 1.6; }
+
+  /* Buttons */
+  .btn {
+    display: flex; align-items: center; justify-content: center;
+    width: 100%; padding: 15px;
+    background: var(--surface); border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    font-size: 16px; font-weight: 500; font-family: var(--font);
+    color: var(--text); cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .btn:active { background: var(--border); }
+  .btn:disabled { opacity: .4; cursor: default; }
+  .btn-row { display: flex; gap: 10px; }
+  .btn-row .btn { flex: 1; }
+
+  /* Progress */
+  .progress-row { display: flex; align-items: center; gap: 10px; }
+  .progress-bar  { flex: 1; height: 5px; background: var(--border); border-radius: 3px; overflow: hidden; }
+  .progress-fill { height: 100%; background: var(--accent); border-radius: 3px; transition: width .35s ease; }
+  .progress-label { font-size: 13px; color: var(--muted); min-width: 36px; text-align: right; }
+
+  /* Question card */
+  .q-card {
+    background: var(--surface); border: 1.5px solid var(--border);
+    border-radius: var(--radius); padding: 1.4rem 1.25rem; text-align: center;
+  }
+  .q-source { font-size: 32px; font-weight: 600; letter-spacing: -.5px; line-height: 1.2; }
+  .q-arrow  { font-size: 18px; color: var(--muted); margin: .35rem 0; }
+  .q-target { font-size: 21px; color: var(--muted); }
+
+  /* Input */
+  .input-row { display: flex; gap: 8px; }
+  .answer-input {
+    flex: 1; height: 52px; padding: 0 14px;
+    font-size: 22px; font-family: var(--font);
+    background: var(--surface); border: 1.5px solid var(--border);
+    border-radius: var(--radius); color: var(--text); outline: none;
+    transition: border-color .15s;
+  }
+  .answer-input:focus { border-color: var(--accent); }
+  .ok-btn {
+    height: 52px; width: 64px; flex-shrink: 0;
+    background: var(--accent); color: #fff; border: none;
+    border-radius: var(--radius);
+    font-size: 18px; font-weight: 600; font-family: var(--font);
+    cursor: pointer; -webkit-tap-highlight-color: transparent;
+  }
+  .ok-btn:active { opacity: .85; }
+
+  /* Feedback */
+  .feedback {
+    padding: 13px 16px; border-radius: var(--radius);
+    font-size: 15px; font-weight: 500;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .feedback.ok  { background: var(--ok-bg);  color: var(--ok);  border: 1px solid var(--ok-bd); }
+  .feedback.err { background: var(--err-bg); color: var(--err); border: 1px solid var(--err-bd); }
+
+  .score-mini { font-size: 13px; color: var(--muted); text-align: center; }
+
+  /* Result */
+  .result-center { text-align: center; padding: 1rem 0; }
+  .result-medal  { font-size: 56px; margin-bottom: .75rem; }
+  .result-score  { font-size: 28px; font-weight: 600; }
+  .result-pct    { font-size: 16px; color: var(--muted); margin-top: .25rem; }
+
+  /* ── Keyboard-open compact mode ── */
+  body.kb .q-card        { padding: .6rem 1rem; }
+  body.kb .q-source      { font-size: 24px; }
+  body.kb .q-arrow       { font-size: 14px; margin: .1rem 0; }
+  body.kb .q-target      { font-size: 17px; }
+  body.kb .answer-input  { height: 44px; font-size: 18px; }
+  body.kb .ok-btn        { height: 44px; }
+  body.kb .feedback      { padding: 9px 13px; font-size: 14px; }
+  body.kb .score-mini    { display: none; }
+  body.kb .screen        { gap: .55rem; }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg:       #1a1916; --surface:  #252420; --border:  #3a3835;
+      --text:     #f0ede8; --muted:    #8a8780;
+      --accent:   #4ade80; --accent-bg:#14301f;
+      --ok:       #4ade80; --ok-bg:    #14301f; --ok-bd:   #166534;
+      --err:      #f87171; --err-bg:   #2d0f0f; --err-bd:  #7f1d1d;
+    }
+    .ok-btn { background: #166534; }
+  }
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <!-- SETTINGS -->
+  <div class="screen active" id="screen-settings">
+    <div>
+      <div class="app-title">Átváltás-kvíz</div>
+      <div class="app-sub">5. osztályos mértékegységek</div>
+    </div>
+    <div id="cat-list" style="display:flex;flex-direction:column;gap:8px"></div>
+    <div class="info-row">
+      20 kérdés &nbsp;·&nbsp; minden 4. dupla ugrás &nbsp;·&nbsp; felváltva kis→nagy és nagy→kis
+    </div>
+    <button class="btn" id="start-btn" onclick="startQuiz()">Kezdjük! &rarr;</button>
+  </div>
+
+  <!-- QUIZ -->
+  <div class="screen" id="screen-quiz">
+    <div class="progress-row">
+      <div class="progress-bar"><div class="progress-fill" id="prog-fill" style="width:0%"></div></div>
+      <div class="progress-label" id="prog-label">1/20</div>
+    </div>
+    <div class="q-card">
+      <div class="q-source" id="q-source"></div>
+      <div class="q-arrow"  id="q-arrow"></div>
+      <div class="q-target" id="q-target"></div>
+    </div>
+    <div class="input-row" id="input-row">
+      <input class="answer-input" id="answer-input" type="text" inputmode="decimal"
+             placeholder="Válasz…" onkeydown="handleKey(event)" autocomplete="off"/>
+      <button class="ok-btn" onclick="submitAnswer()">OK</button>
+    </div>
+    <div class="feedback" id="feedback" style="display:none"></div>
+    <button class="btn" id="next-btn" style="display:none" onclick="nextQuestion()">Következő &rarr;</button>
+    <div class="score-mini" id="score-mini"></div>
+  </div>
+
+  <!-- RESULT -->
+  <div class="screen" id="screen-result">
+    <div class="result-center">
+      <div class="result-medal" id="result-medal"></div>
+      <div class="result-score" id="result-score"></div>
+      <div class="result-pct"   id="result-pct"></div>
+    </div>
+    <div class="btn-row">
+      <button class="btn" onclick="startQuiz()">Újra</button>
+      <button class="btn" onclick="showScreen('settings')">Beállítások</button>
+    </div>
+  </div>
+
+</div>
+<script>
+// ── Unit data ─────────────────────────────────────────────────────────────
+const UNITS = {
+  "Hosszúság": { mm:1, cm:10, dm:100, m:1000, km:1000000 },
+  "Terület":   { "mm²":1, "cm²":100, "dm²":10000, "m²":1000000, ha:10000000000, "km²":1000000000000 },
+  "Térfogat":  { ml:1, cl:10, dl:100, l:1000, "cm³":1, "dm³":1000, "m³":1000000 },
+  "Tömeg":     { mg:1, g:1000, dkg:10000, kg:1000000, t:1000000000 },
+  "Idő":       { s:1, perc:60, "óra":3600, nap:86400 },
+};
+const SINGLE = {
+  "Hosszúság": [["mm","cm"],["cm","dm"],["dm","m"],["m","km"]],
+  "Terület":   [["mm²","cm²"],["cm²","dm²"],["dm²","m²"],["m²","ha"],["ha","km²"]],
+  "Térfogat":  [["ml","dl"],["dl","l"],["l","dm³"],["dm³","m³"]],
+  "Tömeg":     [["mg","g"],["g","dkg"],["dkg","kg"],["kg","t"]],
+  "Idő":       [["s","perc"],["perc","óra"],["óra","nap"]],
+};
+const DOUBLE = {
+  "Hosszúság": [["mm","dm"],["cm","m"],["dm","km"]],
+  "Terület":   [["mm²","dm²"],["cm²","m²"],["dm²","ha"],["m²","km²"]],
+  "Térfogat":  [["ml","l"],["dl","dm³"],["l","m³"]],
+  "Tömeg":     [["mg","dkg"],["g","kg"],["dkg","t"]],
+  "Idő":       [["s","óra"],["perc","nap"]],
+};
+
+// ── Helpers ───────────────────────────────────────────────────────────────
+function niceStr(v) {
+  if (Math.abs(v - Math.round(v)) < 1e-9) return String(Math.round(v));
+  const r1 = Math.round(v * 10) / 10;
+  if (Math.abs(v - r1) < 1e-9) return r1.toFixed(1).replace(".", ",");
+  const r2 = Math.round(v * 100) / 100;
+  if (Math.abs(v - r2) < 1e-9) return r2.toFixed(2).replace(".", ",");
+  return null;
+}
+
+// Mixed time display: 1.5 óra → "1 óra 30 perc", 1.5 nap → "1 nap 12 óra"
+const TIME_NEXT = { nap: ["óra", 24], "óra": ["perc", 60], perc: ["s", 60] };
+function formatTimeSrc(v, unit) {
+  const whole = Math.floor(v);
+  const frac  = Math.round((v - whole) * 1e6) / 1e6;
+  if (frac < 1e-6) return `${whole} ${unit}`;
+  const info = TIME_NEXT[unit];
+  if (!info) return niceStr(v) + " " + unit;
+  const [nextUnit, mult] = info;
+  const sub = Math.round(frac * mult);
+  if (sub === 0) return `${whole} ${unit}`;
+  return whole > 0 ? `${whole} ${unit} ${sub} ${nextUnit}` : `${sub} ${nextUnit}`;
+}
+
+function parseInput(s) { return parseFloat(s.trim().replace(",", ".")); }
+
+function shuffle(a) {
+  const b = [...a];
+  for (let i = b.length-1; i>0; i--) {
+    const j = Math.floor(Math.random()*(i+1)); [b[i],b[j]]=[b[j],b[i]];
+  }
+  return b;
+}
+
+// Weighted cat pick: Idő is 1/3 as likely as each other category
+function pickCat(cats) {
+  const non = cats.filter(c => c !== "Idő");
+  const hasTime = cats.includes("Idő");
+  const timeW = 1/3;
+  const total = non.length + (hasTime ? timeW : 0);
+  let r = Math.random() * total;
+  for (const c of non) { r -= 1; if (r <= 0) return c; }
+  return "Idő";
+}
+
+// ── Generation ────────────────────────────────────────────────────────────
+function tryPair(small, large, map, goUp) {
+  const from = goUp ? small : large;
+  const to   = goUp ? large : small;
+  const factor = map[from] / map[to];
+  for (let i = 0; i < 500; i++) {
+    const ans = Math.floor(Math.random()*999)+1;
+    const src = ans / factor;
+    if (src < 1 || src > 5000) continue;
+    const s = niceStr(src);
+    if (!s || ans > 50000) continue;
+    return { srcVal: src, ans: String(ans), from, to };
+  }
+  return null;
+}
+
+function makeExercise(cats, dj, goUp) {
+  const pool = dj ? DOUBLE : SINGLE;
+  // Try weighted-chosen cat first, then fall back to others in random order
+  const primary = pickCat(cats);
+  const rest    = shuffle(cats.filter(c => c !== primary));
+  for (const cat of [primary, ...rest]) {
+    const map = UNITS[cat];
+    for (const [s,l] of shuffle(pool[cat]||[])) {
+      const r = tryPair(s, l, map, goUp);
+      if (!r) continue;
+      const srcStr = (cat === "Idő")
+        ? formatTimeSrc(r.srcVal, r.from)
+        : (niceStr(r.srcVal) + " " + r.from);
+      return { srcStr, ans: r.ans, from: r.from, to: r.to, dj, goUp };
+    }
+  }
+  if (dj) return makeExercise(cats, false, goUp);
+  return makeExercise(cats, false, !goUp);
+}
+
+function buildQuiz(cats) {
+  return Array.from({length:20}, (_,i) =>
+    makeExercise(cats, (i+1)%4===0, (i+1)%2===1)
+  );
+}
+
+// ── State ─────────────────────────────────────────────────────────────────
+const ALL_CATS = Object.keys(UNITS);
+let activeCats = new Set(ALL_CATS);
+let exercises=[], qIdx=0, score=0, answered=false;
+const AUTO_MS = 700;
+
+// ── Settings ──────────────────────────────────────────────────────────────
+function renderCats() {
+  const list = document.getElementById("cat-list");
+  list.innerHTML = "";
+  for (const cat of ALL_CATS) {
+    const on = activeCats.has(cat);
+    const b = document.createElement("button");
+    b.className = "cat-btn"+(on?" on":"");
+    b.innerHTML = `<span>${cat}</span>${on?'<span>✓</span>':''}`;
+    b.onclick = () => toggleCat(cat);
+    list.appendChild(b);
+  }
+  document.getElementById("start-btn").disabled = activeCats.size===0;
+}
+
+function toggleCat(cat) {
+  if (activeCats.has(cat)) { if (activeCats.size>1) activeCats.delete(cat); }
+  else activeCats.add(cat);
+  renderCats();
+}
+
+// ── Screens ───────────────────────────────────────────────────────────────
+function showScreen(id) {
+  document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
+  document.getElementById("screen-"+id).classList.add("active");
+}
+
+// ── Quiz ──────────────────────────────────────────────────────────────────
+function startQuiz() {
+  exercises = buildQuiz([...activeCats]);
+  qIdx=0; score=0;
+  showScreen("quiz");
+  renderQ();
+}
+
+function renderQ() {
+  answered = false;
+  const ex = exercises[qIdx];
+  document.getElementById("prog-fill").style.width = (qIdx/20*100)+"%";
+  document.getElementById("prog-label").textContent = (qIdx+1)+"/20";
+  document.getElementById("q-source").textContent = ex.srcStr;
+  document.getElementById("q-arrow").textContent  = ex.goUp ? "↑" : "↓";
+  document.getElementById("q-target").textContent = "= _______ "+ex.to;
+  const inp = document.getElementById("answer-input");
+  inp.value = "";
+  document.getElementById("input-row").style.display = "";
+  document.getElementById("feedback").style.display = "none";
+  document.getElementById("next-btn").style.display = "none";
+  document.getElementById("score-mini").textContent =
+    score+" helyes / "+qIdx+" kérdés";
+  inp.focus();
+}
+
+function submitAnswer() {
+  if (answered) return;
+  const raw = document.getElementById("answer-input").value;
+  if (!raw.trim()) return;
+  answered = true;
+
+  const ex = exercises[qIdx];
+  const uv = parseInput(raw);
+  const cv = parseFloat(ex.ans);
+  const ok = isFinite(uv) && Math.abs(uv-cv) < 1e-9;
+  if (ok) score++;
+
+  const fb = document.getElementById("feedback");
+  fb.className = "feedback "+(ok?"ok":"err");
+  fb.style.display = "flex";
+  fb.innerHTML = ok
+    ? `<span>✓</span><span>Helyes!</span>`
+    : `<span>✗</span><span>Helytelen – helyes válasz: <strong>${ex.ans} ${ex.to}</strong></span>`;
+
+  document.getElementById("input-row").style.display = "none";
+  document.getElementById("score-mini").textContent =
+    score+" helyes / "+(qIdx+1)+" kérdés";
+
+  if (ok) {
+    setTimeout(nextQuestion, AUTO_MS);
+  } else {
+    const nb = document.getElementById("next-btn");
+    nb.textContent = (qIdx+1>=20) ? "Eredmény →" : "Következő →";
+    nb.style.display = "";
+  }
+}
+
+function nextQuestion() {
+  qIdx++;
+  if (qIdx>=20) {
+    showScreen("result");
+    const pct = Math.round(score/20*100);
+    document.getElementById("result-medal").textContent =
+      pct>=90?"🥇":pct>=70?"🥈":pct>=50?"🥉":"💪";
+    document.getElementById("result-score").textContent = score+" / 20 pont";
+    document.getElementById("result-pct").textContent   = pct+"% helyes";
+  } else {
+    renderQ();
+  }
+}
+
+function handleKey(e) {
+  if (e.key==="Enter" && !answered) submitAnswer();
+}
+
+// ── Virtual keyboard detection ────────────────────────────────────────────
+if (window.visualViewport) {
+  const check = () => {
+    document.body.classList.toggle("kb",
+      window.visualViewport.height / window.screen.height < 0.65);
+  };
+  window.visualViewport.addEventListener("resize", check);
+  check();
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────
+renderCats();
+</script>
+</body>
+</html>
