@@ -1,4 +1,4 @@
-markdown_content = """# Átváltás-kvíz 🎓
+## Átváltás-kvíz 🎓
 
 Egy egyszerű, böngészőben futó kvíz alkalmazás **5. osztályos mértékegység-átváltáshoz**, a magyar tantervnek megfelelően. Letöltés és telepítés nélkül használható – egyetlen `.html` fájl, amely bármilyen eszközön (telefon, tablet, PC) működik.
 
@@ -20,9 +20,3 @@ Nyisd meg bármilyen böngészőben (Chrome, Safari, Firefox stb.).
 - Keretrendszer nélküli, tiszta **HTML/CSS/JS** megoldás, külső függőségek nélkül.
 - A véletlenszám-generátor garantálja, hogy a **válasz minden esetben egész szám**, a forrásérték pedig legfeljebb 2 tizedesjegyű.
 - A kód könnyen olvasható, az egységpárok és kategóriák a kódon belül egyszerűen bővíthetők.
-"""
-
-with open("README.md", "w", encoding="utf-8") as f:
-    f.write(markdown_content)
-
-print("File generated successfully.")
