@@ -3,155 +3,112 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, interactive-widget=resizes-content">
-<title>Átváltás-kvíz</title>
+<title>5. osztály – Matematika</title>
 <style>
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f5f3ee;--surface:#fff;--border:#e0ddd5;
+  --text:#1a1916;--muted:#7a7870;
+  --accent:#2d6a4f;--accent-bg:#e8f4ef;
+  --ok:#166534;--ok-bg:#dcfce7;--ok-bd:#bbf7d0;
+  --err:#991b1b;--err-bg:#fee2e2;--err-bd:#fecaca;
+  --r:12px;--f:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif
+}
+html,body{height:100%}
+body{font-family:var(--f);background:var(--bg);color:var(--text);
+     display:flex;align-items:flex-start;justify-content:center;padding:1.25rem 1rem}
+.shell{width:100%;max-width:440px}
+.screen{display:none;flex-direction:column;gap:.85rem}
+.screen.active{display:flex}
 
-  :root {
-    --bg:       #f5f3ee;
-    --surface:  #ffffff;
-    --border:   #e0ddd5;
-    --text:     #1a1916;
-    --muted:    #7a7870;
-    --accent:   #2d6a4f;
-    --accent-bg:#e8f4ef;
-    --ok:       #166534;
-    --ok-bg:    #dcfce7;
-    --ok-bd:    #bbf7d0;
-    --err:      #991b1b;
-    --err-bg:   #fee2e2;
-    --err-bd:   #fecaca;
-    --radius:   12px;
-    --font:     -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  }
+/* ── settings ── */
+.app-title{font-size:22px;font-weight:600;letter-spacing:-.3px}
+.app-sub{font-size:14px;color:var(--muted);margin-top:.2rem;margin-bottom:.5rem}
 
-  html, body { height: 100%; }
+.row-btn{display:flex;align-items:center;justify-content:space-between;
+         padding:13px 16px;background:var(--surface);border:1.5px solid var(--border);
+         border-radius:var(--r);cursor:pointer;font-family:var(--f);color:var(--text);
+         transition:border-color .15s,background .15s;-webkit-tap-highlight-color:transparent;
+         text-align:left}
+.row-btn.on{background:var(--accent-bg);border-color:var(--accent);color:var(--accent)}
+.row-title{font-size:15px;font-weight:500}
+.row-sub{font-size:13px;opacity:.65;margin-top:.15rem}
+.row-check{font-size:17px;flex-shrink:0;margin-left:12px}
 
-  body {
-    font-family: var(--font);
-    background: var(--bg);
-    color: var(--text);
-    display: flex;
-    align-items: flex-start;
-    justify-content: center;
-    padding: 1.25rem 1rem;
-  }
+/* ── shared button ── */
+.btn{display:flex;align-items:center;justify-content:center;
+     width:100%;padding:15px;background:var(--surface);border:1.5px solid var(--border);
+     border-radius:var(--r);font-size:16px;font-weight:500;font-family:var(--f);
+     color:var(--text);cursor:pointer;-webkit-tap-highlight-color:transparent}
+.btn:active{background:var(--border)}
+.btn:disabled{opacity:.4;cursor:default}
+.btn-row{display:flex;gap:10px}
+.btn-row .btn{flex:1}
 
-  .shell { width: 100%; max-width: 440px; }
+/* ── progress ── */
+.progress-row{display:flex;align-items:center;gap:10px}
+.progress-bar{flex:1;height:5px;background:var(--border);border-radius:3px;overflow:hidden}
+.progress-fill{height:100%;background:var(--accent);border-radius:3px;transition:width .35s}
+.progress-label{font-size:13px;color:var(--muted);min-width:36px;text-align:right}
 
-  .screen { display: none; flex-direction: column; gap: .85rem; }
-  .screen.active { display: flex; }
+/* ── question card ── */
+.q-card{background:var(--surface);border:1.5px solid var(--border);
+        border-radius:var(--r);padding:1.2rem 1.25rem;text-align:center}
+.q-source{font-size:32px;font-weight:600;letter-spacing:-.5px;line-height:1.2}
+.geo-label{font-size:13px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;
+           color:var(--muted);margin-bottom:.15rem}
+.geo-given{font-size:16px;font-weight:500;color:var(--text);margin-bottom:.1rem}
+.q-arrow{font-size:18px;color:var(--muted);margin:.3rem 0}
+.q-target{font-size:21px;color:var(--muted)}
 
-  /* ── Settings ── */
-  .app-title { font-size: 22px; font-weight: 600; letter-spacing: -.3px; }
-  .app-sub   { font-size: 14px; color: var(--muted); margin-top: .2rem; margin-bottom: .4rem; }
+/* ── viz ── */
+#q-viz{line-height:0}
+#q-viz svg{display:block;margin:.3rem auto 0;max-height:128px;width:100%;max-width:280px}
 
-  .cat-btn {
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 13px 16px;
-    background: var(--surface); border: 1.5px solid var(--border);
-    border-radius: var(--radius); cursor: pointer;
-    font-size: 15px; font-family: var(--font); color: var(--text);
-    transition: border-color .15s, background .15s;
-    -webkit-tap-highlight-color: transparent;
-  }
-  .cat-btn.on { background: var(--accent-bg); border-color: var(--accent); color: var(--accent); font-weight: 500; }
+/* ── input ── */
+.input-row{display:flex;gap:8px}
+.answer-input{flex:1;height:52px;padding:0 14px;font-size:22px;font-family:var(--f);
+              background:var(--surface);border:1.5px solid var(--border);border-radius:var(--r);
+              color:var(--text);outline:none;transition:border-color .15s}
+.answer-input:focus{border-color:var(--accent)}
+.ok-btn{height:52px;width:64px;flex-shrink:0;background:var(--accent);color:#fff;border:none;
+        border-radius:var(--r);font-size:18px;font-weight:600;font-family:var(--f);
+        cursor:pointer;-webkit-tap-highlight-color:transparent}
+.ok-btn:active{opacity:.85}
 
-  /* ── Buttons ── */
-  .btn {
-    display: flex; align-items: center; justify-content: center;
-    width: 100%; padding: 15px;
-    background: var(--surface); border: 1.5px solid var(--border);
-    border-radius: var(--radius);
-    font-size: 16px; font-weight: 500; font-family: var(--font);
-    color: var(--text); cursor: pointer;
-    -webkit-tap-highlight-color: transparent;
-  }
-  .btn:active { background: var(--border); }
-  .btn:disabled { opacity: .4; cursor: default; }
-  .btn-row { display: flex; gap: 10px; }
-  .btn-row .btn { flex: 1; }
+/* ── feedback ── */
+.feedback{padding:13px 16px;border-radius:var(--r);font-size:15px;font-weight:500;
+          display:flex;align-items:center;gap:10px}
+.feedback.ok {background:var(--ok-bg); color:var(--ok); border:1px solid var(--ok-bd)}
+.feedback.err{background:var(--err-bg);color:var(--err);border:1px solid var(--err-bd)}
+.score-mini{font-size:13px;color:var(--muted);text-align:center}
 
-  /* ── Progress ── */
-  .progress-row { display: flex; align-items: center; gap: 10px; }
-  .progress-bar  { flex: 1; height: 5px; background: var(--border); border-radius: 3px; overflow: hidden; }
-  .progress-fill { height: 100%; background: var(--accent); border-radius: 3px; transition: width .35s ease; }
-  .progress-label { font-size: 13px; color: var(--muted); min-width: 36px; text-align: right; }
+/* ── result ── */
+.result-center{text-align:center;padding:1rem 0}
+.result-medal{font-size:56px;margin-bottom:.75rem}
+.result-score{font-size:28px;font-weight:600}
+.result-pct{font-size:16px;color:var(--muted);margin-top:.25rem}
 
-  /* ── Question card ── */
-  .q-card {
-    background: var(--surface); border: 1.5px solid var(--border);
-    border-radius: var(--radius); padding: 1.4rem 1.25rem; text-align: center;
-  }
-  /* Conversion: single large line */
-  .q-source      { font-size: 32px; font-weight: 600; letter-spacing: -.5px; line-height: 1.2; }
-  .q-arrow       { font-size: 18px; color: var(--muted); margin: .35rem 0; }
-  .q-target      { font-size: 21px; color: var(--muted); }
+/* ── keyboard compact ── */
+body.kb .q-card{padding:.55rem 1rem}
+body.kb .q-source{font-size:24px}
+body.kb .geo-label{font-size:11px}
+body.kb .geo-given{font-size:14px}
+body.kb #q-viz svg{max-height:88px}
+body.kb .q-arrow{font-size:14px;margin:.05rem 0}
+body.kb .q-target{font-size:17px}
+body.kb .answer-input{height:44px;font-size:18px}
+body.kb .ok-btn{height:44px}
+body.kb .feedback{padding:9px 13px;font-size:14px}
+body.kb .score-mini{display:none}
+body.kb .screen{gap:.5rem}
 
-  /* Geometry: two-line layout */
-  .geo-shape     { font-size: 20px; font-weight: 600; margin-bottom: .3rem; }
-  .geo-given     { font-size: 16px; color: var(--muted); line-height: 1.5; }
-
-  /* ── Input ── */
-  .input-row { display: flex; gap: 8px; }
-  .answer-input {
-    flex: 1; height: 52px; padding: 0 14px;
-    font-size: 22px; font-family: var(--font);
-    background: var(--surface); border: 1.5px solid var(--border);
-    border-radius: var(--radius); color: var(--text); outline: none;
-    transition: border-color .15s;
-  }
-  .answer-input:focus { border-color: var(--accent); }
-  .ok-btn {
-    height: 52px; width: 64px; flex-shrink: 0;
-    background: var(--accent); color: #fff; border: none;
-    border-radius: var(--radius);
-    font-size: 18px; font-weight: 600; font-family: var(--font);
-    cursor: pointer; -webkit-tap-highlight-color: transparent;
-  }
-  .ok-btn:active { opacity: .85; }
-
-  /* ── Feedback ── */
-  .feedback {
-    padding: 13px 16px; border-radius: var(--radius);
-    font-size: 15px; font-weight: 500;
-    display: flex; align-items: center; gap: 10px;
-  }
-  .feedback.ok  { background: var(--ok-bg);  color: var(--ok);  border: 1px solid var(--ok-bd); }
-  .feedback.err { background: var(--err-bg); color: var(--err); border: 1px solid var(--err-bd); }
-
-  .score-mini { font-size: 13px; color: var(--muted); text-align: center; }
-
-  /* ── Result ── */
-  .result-center { text-align: center; padding: 1rem 0; }
-  .result-medal  { font-size: 56px; margin-bottom: .75rem; }
-  .result-score  { font-size: 28px; font-weight: 600; }
-  .result-pct    { font-size: 16px; color: var(--muted); margin-top: .25rem; }
-
-  /* ── Keyboard-open compact mode ── */
-  body.kb .q-card        { padding: .6rem 1rem; }
-  body.kb .q-source      { font-size: 24px; }
-  body.kb .geo-shape     { font-size: 17px; }
-  body.kb .geo-given     { font-size: 14px; }
-  body.kb .q-arrow       { font-size: 14px; margin: .1rem 0; }
-  body.kb .q-target      { font-size: 17px; }
-  body.kb .answer-input  { height: 44px; font-size: 18px; }
-  body.kb .ok-btn        { height: 44px; }
-  body.kb .feedback      { padding: 9px 13px; font-size: 14px; }
-  body.kb .score-mini    { display: none; }
-  body.kb .screen        { gap: .55rem; }
-
-  @media (prefers-color-scheme: dark) {
-    :root {
-      --bg:       #1a1916; --surface:  #252420; --border:  #3a3835;
-      --text:     #f0ede8; --muted:    #8a8780;
-      --accent:   #4ade80; --accent-bg:#14301f;
-      --ok:       #4ade80; --ok-bg:    #14301f; --ok-bd:   #166534;
-      --err:      #f87171; --err-bg:   #2d0f0f; --err-bd:  #7f1d1d;
-    }
-    .ok-btn { background: #166534; }
-    .geo-given { color: var(--muted); }
-  }
+@media(prefers-color-scheme:dark){
+  :root{--bg:#1a1916;--surface:#252420;--border:#3a3835;--text:#f0ede8;--muted:#8a8780;
+        --accent:#4ade80;--accent-bg:#14301f;--ok:#4ade80;--ok-bg:#14301f;--ok-bd:#166534;
+        --err:#f87171;--err-bg:#2d0f0f;--err-bd:#7f1d1d}
+  .ok-btn{background:#166534}
+}
 </style>
 </head>
 <body>
@@ -160,11 +117,16 @@
   <!-- SETTINGS -->
   <div class="screen active" id="screen-settings">
     <div>
-      <div class="app-title">Átváltás-kvíz</div>
-      <div class="app-sub">5. osztályos matematika</div>
+      <div class="app-title">5. osztály – Matematika</div>
+      <div class="app-sub">Válassz témakört:</div>
     </div>
-    <div id="cat-list" style="display:flex;flex-direction:column;gap:8px"></div>
-    <button class="btn" id="start-btn" onclick="startQuiz()">Kezdjük! &rarr;</button>
+    <div style="display:flex;flex-direction:column;gap:10px" id="group-list"></div>
+    <button class="row-btn" id="viz-btn" onclick="toggleViz()">
+      <div><div class="row-title">Ábra megjelenítése</div>
+           <div class="row-sub">Síkidomoknál rajzos segítség</div></div>
+      <span class="row-check" id="viz-check">✓</span>
+    </button>
+    <button class="btn" id="start-btn" onclick="startQuiz()">Kezdjük! →</button>
   </div>
 
   <!-- QUIZ -->
@@ -173,8 +135,9 @@
       <div class="progress-bar"><div class="progress-fill" id="prog-fill" style="width:0%"></div></div>
       <div class="progress-label" id="prog-label">1/20</div>
     </div>
-    <div class="q-card" id="q-card">
-      <div id="q-source-area"></div>
+    <div class="q-card">
+      <div id="q-top"></div>
+      <div id="q-viz"></div>
       <div class="q-arrow" id="q-arrow"></div>
       <div class="q-target" id="q-target"></div>
     </div>
@@ -184,7 +147,7 @@
       <button class="ok-btn" onclick="submitAnswer()">OK</button>
     </div>
     <div class="feedback" id="feedback" style="display:none"></div>
-    <button class="btn" id="next-btn" style="display:none" onclick="nextQuestion()">Következő &rarr;</button>
+    <button class="btn" id="next-btn" style="display:none" onclick="nextQuestion()">Következő →</button>
     <div class="score-mini" id="score-mini"></div>
   </div>
 
@@ -206,464 +169,451 @@
 // ═══════════════════════════════════════════════════════
 //  CONVERSION DATA
 // ═══════════════════════════════════════════════════════
-
-const CONV_UNITS = {
-  "Hosszúság": { mm:1, cm:10, dm:100, m:1000, km:1000000 },
-  "Terület":   { "mm²":1, "cm²":100, "dm²":10000, "m²":1000000, ha:10000000000, "km²":1000000000000 },
-  "Térfogat":  { ml:1, cl:10, dl:100, l:1000, "cm³":1, "dm³":1000, "m³":1000000 },
-  "Tömeg":     { mg:1, g:1000, dkg:10000, kg:1000000, t:1000000000 },
-  "Idő":       { mp:1, perc:60, "óra":3600, nap:86400 },
+const CONV_UNITS={
+  Hosszúság:{mm:1,cm:10,dm:100,m:1000,km:1e6},
+  Terület:{'mm²':1,'cm²':100,'dm²':1e4,'m²':1e6,ha:1e10,'km²':1e12},
+  Térfogat:{ml:1,cl:10,dl:100,l:1000,'cm³':1,'dm³':1000,'m³':1e6},
+  Tömeg:{mg:1,g:1000,dkg:1e4,kg:1e6,t:1e9},
+  Idő:{mp:1,perc:60,'óra':3600,nap:86400},
 };
-
-
-const SINGLE = {
-  "Hosszúság": [["mm","cm"],["cm","dm"],["dm","m"],["m","km"]],
-  "Terület":   [["mm²","cm²"],["cm²","dm²"],["dm²","m²"],["m²","ha"],["ha","km²"]],
-  "Térfogat":  [["ml","dl"],["dl","l"],["l","dm³"],["dm³","m³"]],
-  "Tömeg":     [["mg","g"],["g","dkg"],["dkg","kg"],["kg","t"]],
-  "Idő":       [["mp","perc"],["perc","óra"],["óra","nap"]],
+const SINGLE={
+  Hosszúság:[['mm','cm'],['cm','dm'],['dm','m'],['m','km']],
+  Terület:[['mm²','cm²'],['cm²','dm²'],['dm²','m²'],['m²','ha'],['ha','km²']],
+  Térfogat:[['ml','dl'],['dl','l'],['l','dm³'],['dm³','m³']],
+  Tömeg:[['mg','g'],['g','dkg'],['dkg','kg'],['kg','t']],
+  Idő:[['mp','perc'],['perc','óra'],['óra','nap']],
 };
-const DOUBLE = {
-  "Hosszúság": [["mm","dm"],["cm","m"],["dm","km"]],
-  "Terület":   [["mm²","dm²"],["cm²","m²"],["dm²","ha"],["m²","km²"]],
-  "Térfogat":  [["ml","l"],["dl","dm³"],["l","m³"]],
-  "Tömeg":     [["mg","dkg"],["g","kg"],["dkg","t"]],
-  "Idő":       [["mp","óra"],["perc","nap"]],
+const DOUBLE={
+  Hosszúság:[['mm','dm'],['cm','m'],['dm','km']],
+  Terület:[['mm²','dm²'],['cm²','m²'],['dm²','ha'],['m²','km²']],
+  Térfogat:[['ml','l'],['dl','dm³'],['l','m³']],
+  Tömeg:[['mg','dkg'],['g','kg'],['dkg','t']],
+  Idő:[['mp','óra'],['perc','nap']],
 };
 
 // ═══════════════════════════════════════════════════════
-//  NUMBER HELPERS
+//  HELPERS
 // ═══════════════════════════════════════════════════════
-
-function niceStr(v) {
-  if (Math.abs(v - Math.round(v)) < 1e-9) return String(Math.round(v));
-  const r1 = Math.round(v * 10) / 10;
-  if (Math.abs(v - r1) < 1e-9) return r1.toFixed(1).replace(".", ",");
-  const r2 = Math.round(v * 100) / 100;
-  if (Math.abs(v - r2) < 1e-9) return r2.toFixed(2).replace(".", ",");
+function niceStr(v){
+  if(Math.abs(v-Math.round(v))<1e-9)return String(Math.round(v));
+  const r1=Math.round(v*10)/10; if(Math.abs(v-r1)<1e-9)return r1.toFixed(1).replace('.',',');
+  const r2=Math.round(v*100)/100; if(Math.abs(v-r2)<1e-9)return r2.toFixed(2).replace('.',',');
   return null;
 }
+function parseNum(s){return parseFloat(String(s).trim().replace(',','.'))}
+function randInt(a,b){return a+Math.floor(Math.random()*(b-a+1))}
+function shuffle(a){const b=[...a];for(let i=b.length-1;i>0;i--){const j=0|Math.random()*(i+1);[b[i],b[j]]=[b[j],b[i]]}return b}
 
-function parseInput(s) { return parseFloat(s.trim().replace(",", ".")); }
-
-function randInt(min, max) { return min + Math.floor(Math.random() * (max - min + 1)); }
-
-function shuffle(a) {
-  const b = [...a];
-  for (let i = b.length-1; i>0; i--) {
-    const j = Math.floor(Math.random()*(i+1)); [b[i],b[j]]=[b[j],b[i]];
-  }
-  return b;
-}
-
-// Mixed time source: 1.5 óra → "1 óra 30 perc"
-const TIME_NEXT = { nap:["óra",24], "óra":["perc",60], perc:["mp",60] };
-function formatTimeSrc(v, unit) {
-  const whole = Math.floor(v);
-  const frac  = Math.round((v - whole) * 1e6) / 1e6;
-  if (frac < 1e-6) return `${whole} ${unit}`;
-  const info = TIME_NEXT[unit];
-  if (!info) return niceStr(v) + " " + unit;
-  const [nextUnit, mult] = info;
-  const sub = Math.round(frac * mult);
-  if (sub === 0) return `${whole} ${unit}`;
-  return whole > 0 ? `${whole} ${unit} ${sub} ${nextUnit}` : `${sub} ${nextUnit}`;
+const TIME_NEXT={nap:['óra',24],'óra':['perc',60],perc:['mp',60]};
+function fmtTime(v,unit){
+  const w=Math.floor(v),f=Math.round((v-w)*1e6)/1e6;
+  if(f<1e-6)return`${w} ${unit}`;
+  const[nu,m]=TIME_NEXT[unit]||[]; if(!nu)return niceStr(v)+' '+unit;
+  const sub=Math.round(f*m);
+  return w>0?`${w} ${unit} ${sub} ${nu}`:`${sub} ${nu}`;
 }
 
 // ═══════════════════════════════════════════════════════
-//  CONVERSION EXERCISE GENERATION
+//  SVG HELPERS
 // ═══════════════════════════════════════════════════════
+const VW=280,VH=168;
 
-const FRACS = [0.5, 0.25, 0.75];
+function svgWrap(body){
+  return`<svg viewBox="0 0 ${VW} ${VH}" xmlns="http://www.w3.org/2000/svg">${body}</svg>`;
+}
 
-function tryPair(small, large, map, goUp) {
-  const from = goUp ? small : large;
-  const to   = goUp ? large : small;
-  const factor = map[from] / map[to];
-  for (let i = 0; i < 500; i++) {
-    const ans = Math.floor(Math.random()*999)+1;
-    const src = ans / factor;
-    if (src < 1 || src > 5000) continue;
-    const s = niceStr(src);
-    if (!s || ans > 50000) continue;
-    return { srcVal:src, ans:String(ans), from, to };
+// text label; unknown=true → green+bold
+function T(x,y,txt,unk,anchor){
+  anchor=anchor||'middle';
+  const fill=unk?'var(--accent)':'var(--text)';
+  const fw=unk?700:500;
+  return`<text x="${+x.toFixed(1)}" y="${+y.toFixed(1)}" text-anchor="${anchor}" dominant-baseline="central" font-size="13" fill="${fill}" font-weight="${fw}">${txt}</text>`;
+}
+
+// right-angle square at corner; pos = tl/tr/br/bl
+function RA(x,y,pos,s){
+  s=s||8;
+  const d={
+    tl:`M${x+s},${y} L${x+s},${y+s} L${x},${y+s}`,
+    tr:`M${x-s},${y} L${x-s},${y+s} L${x},${y+s}`,
+    br:`M${x-s},${y} L${x-s},${y-s} L${x},${y-s}`,
+    bl:`M${x+s},${y} L${x+s},${y-s} L${x},${y-s}`,
+  }[pos];
+  return`<path d="${d}" fill="none" stroke="var(--muted)" stroke-width="1.1"/>`;
+}
+
+// tick mark perpendicular to segment [p1,p2] at midpoint
+function TICK(p1,p2){
+  const mx=(p1[0]+p2[0])/2,my=(p1[1]+p2[1])/2;
+  const dx=p2[0]-p1[0],dy=p2[1]-p1[1],len=Math.sqrt(dx*dx+dy*dy);
+  const px=-dy/len*5,py=dx/len*5;
+  return`<line x1="${(mx+px).toFixed(1)}" y1="${(my+py).toFixed(1)}" x2="${(mx-px).toFixed(1)}" y2="${(my-py).toFixed(1)}" stroke="var(--muted)" stroke-width="1.5" stroke-linecap="round"/>`;
+}
+
+// outward unit normal of edge p1→p2, away from opposite vertex p3
+function outN(p1,p2,p3){
+  const dx=p2[0]-p1[0],dy=p2[1]-p1[1],len=Math.sqrt(dx*dx+dy*dy);
+  const n=[-dy/len,dx/len];
+  const mx=(p1[0]+p2[0])/2,my=(p1[1]+p2[1])/2;
+  return(n[0]*(mx-p3[0])+n[1]*(my-p3[1]))>0?n:[-n[0],-n[1]];
+}
+
+// label on outside of triangle edge, variable name + value
+function edgeLbl(p1,p2,p3,varName,val,off){
+  off=off||24;
+  const unk=val==='?';
+  const mx=(p1[0]+p2[0])/2,my=(p1[1]+p2[1])/2;
+  const[nx,ny]=outN(p1,p2,p3);
+  return T(mx+nx*off,my+ny*off,`${varName} = ${val}`,unk);
+}
+
+// ── shapes ────────────────────────────────────────────
+
+function vizSquare(aLbl,inside){
+  const sz=100,x0=(VW-sz)/2,y0=14,cx=x0+sz/2,cy=y0+sz/2;
+  const unkA=aLbl==='?',unkIn=inside&&inside.includes('?');
+  const fill='rgba(45,106,79,0.09)';
+  return svgWrap(
+    `<rect x="${x0}" y="${y0}" width="${sz}" height="${sz}" fill="${fill}" stroke="var(--text)" stroke-width="2"/>`+
+    RA(x0,y0,'tl')+RA(x0+sz,y0,'tr')+RA(x0+sz,y0+sz,'br')+RA(x0,y0+sz,'bl')+
+    TICK([x0,y0],[x0+sz,y0])+TICK([x0+sz,y0],[x0+sz,y0+sz])+
+    TICK([x0+sz,y0+sz],[x0,y0+sz])+TICK([x0,y0+sz],[x0,y0])+
+    T(cx,y0+sz+18,`a = ${aLbl}`,unkA)+
+    (inside?T(cx,cy,inside,unkIn,'middle'):'')
+  );
+}
+
+function vizRect(aLbl,bLbl,aVal,bVal,inside){
+  const ratio=(aVal&&bVal)?Math.max(0.42,Math.min(2.8,aVal/bVal)):1.75;
+  const maxW=168,maxH=104;
+  let w,h;
+  if(ratio>=1){w=maxW;h=Math.round(maxW/ratio);}else{h=maxH;w=Math.round(maxH*ratio);}
+  w=Math.max(72,w);h=Math.max(52,h);
+  const x0=(VW-w)/2,y0=(VH-h)/2-8,cx=x0+w/2,cy=y0+h/2;
+  const unkA=aLbl==='?',unkB=bLbl==='?',unkIn=inside&&inside.includes('?');
+  const bx=x0+w+24,by=cy;
+  const fill='rgba(45,106,79,0.09)';
+  return svgWrap(
+    `<rect x="${x0}" y="${y0}" width="${w}" height="${h}" fill="${fill}" stroke="var(--text)" stroke-width="2"/>`+
+    RA(x0,y0,'tl')+RA(x0+w,y0,'tr')+RA(x0+w,y0+h,'br')+RA(x0,y0+h,'bl')+
+    T(cx,y0+h+18,`a = ${aLbl}`,unkA)+
+    `<text x="${bx.toFixed(1)}" y="${by.toFixed(1)}" text-anchor="middle" dominant-baseline="central" font-size="13" fill="${unkB?'var(--accent)':'var(--text)'}" font-weight="${unkB?700:500}" transform="rotate(-90,${bx.toFixed(1)},${by.toFixed(1)})">b = ${bLbl}</text>`+
+    (inside?T(cx,cy,inside,unkIn):'')
+  );
+}
+
+function vizEquilateral(aLbl){
+  const A=[68,148],B=[212,148],Tv=[140,23];
+  const unk=aLbl==='?';
+  return svgWrap(
+    `<polygon points="${A} ${B} ${Tv}" fill="rgba(45,106,79,0.09)" stroke="var(--text)" stroke-width="2"/>`+
+    TICK(A,B)+TICK(A,Tv)+TICK(B,Tv)+
+    edgeLbl(A,B,Tv,'a',aLbl,18)+
+    edgeLbl(A,Tv,B,'a',aLbl,26)+
+    edgeLbl(B,Tv,A,'a',aLbl,26)
+  );
+}
+
+function vizIsosceles(aLbl,bLbl){
+  const A=[80,148],B=[200,148],Tv=[140,42];
+  return svgWrap(
+    `<polygon points="${A} ${B} ${Tv}" fill="rgba(45,106,79,0.09)" stroke="var(--text)" stroke-width="2"/>`+
+    TICK(A,Tv)+TICK(B,Tv)+
+    edgeLbl(A,B,Tv,'b',bLbl,18)+
+    edgeLbl(A,Tv,B,'a',aLbl,28)+
+    edgeLbl(B,Tv,A,'a',aLbl,28)
+  );
+}
+
+function vizScalene(aLbl,bLbl,cLbl,aV,bV,cV){
+  // place side a as base (A→B), side c = A→C, side b = B→C
+  const cosA=(aV*aV+cV*cV-bV*bV)/(2*aV*cV);
+  const Cx_=cV*cosA,Cy_=cV*Math.sqrt(Math.max(0,1-cosA*cosA));
+  const raw=[[0,0],[aV,0],[Cx_,Cy_]];           // +Cy_: apex above base in math coords
+  const xs=raw.map(p=>p[0]),ys=raw.map(p=>p[1]);
+  const minX=Math.min(...xs),maxX=Math.max(...xs),minY=Math.min(...ys),maxY=Math.max(...ys);
+  const sc=Math.min(155/(maxX-minX),92/(maxY-minY));
+  const ox=(VW-(maxX-minX)*sc)/2-minX*sc;
+  const oy=(VH+(maxY-minY)*sc)/2;               // base sits at bottom of centred region
+  const pts=raw.map(([x,y])=>[+(x*sc+ox).toFixed(1),+(-y*sc+oy).toFixed(1)]);
+  const[A,Bv,C]=pts;
+  const poly=pts.map(p=>p.join(',')).join(' ');
+  return svgWrap(
+    `<polygon points="${poly}" fill="rgba(45,106,79,0.09)" stroke="var(--text)" stroke-width="2"/>`+
+    edgeLbl(A,Bv,C,'a',aLbl,22)+
+    edgeLbl(Bv,C,A,'b',bLbl,28)+
+    edgeLbl(A,C,Bv,'c',cLbl,28)
+  );
+}
+
+function makeViz(v){
+  if(!v)return'';
+  if(v.t==='sq')  return vizSquare(v.a,v.in);
+  if(v.t==='rc')  return vizRect(v.a,v.b,v.aV,v.bV,v.in);
+  if(v.t==='eq')  return vizEquilateral(v.a);
+  if(v.t==='iso') return vizIsosceles(v.a,v.b);
+  if(v.t==='sc')  return vizScalene(v.a,v.b,v.c,v.aV,v.bV,v.cV);
+  return'';
+}
+
+// ═══════════════════════════════════════════════════════
+//  GEOMETRY GENERATORS
+// ═══════════════════════════════════════════════════════
+function geo(shape,given,ans,to,qLabel,viz){
+  return{isGeo:true,shape,given,ans,to,qLabel,viz};
+}
+
+const GEO={
+  Síkterület:[
+    ()=>{const a=randInt(2,20);     return geo('Négyzet',  `a = ${a} cm`,       String(a*a),  'cm²','T',   {t:'sq',a:`${a} cm`,   in:'T = ?'})},
+    ()=>{const a=randInt(2,13);     return geo('Négyzet',  `T = ${a*a} cm²`,    String(a),    'cm', 'a',   {t:'sq',a:'?',         in:`T = ${a*a} cm²`})},
+    ()=>{const a=randInt(2,15),b=randInt(2,15); return geo('Téglalap',`a = ${a} cm,  b = ${b} cm`,String(a*b),'cm²','T',{t:'rc',a:`${a} cm`,b:`${b} cm`,aV:a,bV:b,in:'T = ?'})},
+    ()=>{const a=randInt(2,12),b=randInt(2,12); return geo('Téglalap',`T = ${a*b} cm²,  a = ${a} cm`,String(b),'cm','b',{t:'rc',a:`${a} cm`,b:'?',aV:a,bV:null,in:`T = ${a*b} cm²`})},
+    ()=>{const a=randInt(2,12),b=randInt(2,12); return geo('Téglalap',`T = ${a*b} cm²,  b = ${b} cm`,String(a),'cm','a',{t:'rc',a:'?',b:`${b} cm`,aV:null,bV:b,in:`T = ${a*b} cm²`})},
+  ],
+  Kerület:[
+    ()=>{const a=randInt(2,20);     return geo('Négyzet',  `a = ${a} cm`,       String(4*a),  'cm', 'K',   {t:'sq',a:`${a} cm`,   in:null})},
+    ()=>{const a=randInt(2,15);     return geo('Négyzet',  `K = ${4*a} cm`,     String(a),    'cm', 'a',   {t:'sq',a:'?',         in:null})},
+    ()=>{const a=randInt(2,15),b=randInt(2,15); return geo('Téglalap',`a = ${a} cm,  b = ${b} cm`,String(2*(a+b)),'cm','K',{t:'rc',a:`${a} cm`,b:`${b} cm`,aV:a,bV:b,in:null})},
+    ()=>{const a=randInt(2,12),b=randInt(2,12); return geo('Téglalap',`K = ${2*(a+b)} cm,  a = ${a} cm`,String(b),'cm','b',{t:'rc',a:`${a} cm`,b:'?',aV:a,bV:null,in:null})},
+    ()=>{const a=randInt(2,12),b=randInt(2,12); return geo('Téglalap',`K = ${2*(a+b)} cm,  b = ${b} cm`,String(a),'cm','a',{t:'rc',a:'?',b:`${b} cm`,aV:null,bV:b,in:null})},
+    ()=>{const a=randInt(2,20);     return geo('Egyenlő oldalú △',`a = ${a} cm`,String(3*a),'cm','K',{t:'eq',a:`${a} cm`})},
+    ()=>{const a=randInt(2,15);     return geo('Egyenlő oldalú △',`K = ${3*a} cm`,String(a),'cm','a',{t:'eq',a:'?'})},
+    ()=>{const a=randInt(3,15),b=randInt(2,2*a-1); return geo('Egyenlő szárú △',`a = ${a} cm (szár),  b = ${b} cm (alap)`,String(2*a+b),'cm','K',{t:'iso',a:`${a} cm`,b:`${b} cm`})},
+    ()=>{const a=randInt(3,12),b=randInt(2,2*a-1); return geo('Egyenlő szárú △',`K = ${2*a+b} cm,  a = ${a} cm (szár)`,String(b),'cm','b (alap)',{t:'iso',a:`${a} cm`,b:'?'})},
+    ()=>{const a=randInt(3,12),b=randInt(2,2*a-1); return geo('Egyenlő szárú △',`K = ${2*a+b} cm,  b = ${b} cm (alap)`,String(a),'cm','a (szár)',{t:'iso',a:'?',b:`${b} cm`})},
+    ()=>{
+      let a,b,c,n=0;
+      do{a=randInt(2,14);b=randInt(2,14);c=randInt(2,14);n++}
+      while((a===b||b===c||a===c||a+b<=c||a+c<=b||b+c<=a)&&n<300);
+      return geo('Háromszög',`a = ${a} cm,  b = ${b} cm,  c = ${c} cm`,String(a+b+c),'cm','K',{t:'sc',a:`${a} cm`,b:`${b} cm`,c:`${c} cm`,aV:a,bV:b,cV:c});
+    },
+    ()=>{
+      let a,b,c,n=0;
+      do{a=randInt(2,12);b=randInt(2,12);c=randInt(2,12);n++}
+      while((a===b||b===c||a===c||a+b<=c||a+c<=b||b+c<=a)&&n<300);
+      return geo('Háromszög',`K = ${a+b+c} cm,  a = ${a} cm,  b = ${b} cm`,String(c),'cm','c',{t:'sc',a:`${a} cm`,b:`${b} cm`,c:'?',aV:a,bV:b,cV:c});
+    },
+  ],
+};
+
+// ═══════════════════════════════════════════════════════
+//  CONVERSION GENERATORS
+// ═══════════════════════════════════════════════════════
+const FRACS=[0.5,0.25,0.75];
+
+function tryPair(s,l,map,goUp){
+  const from=goUp?s:l,to=goUp?l:s,fac=map[from]/map[to];
+  for(let i=0;i<500;i++){
+    const ans=randInt(1,999),src=ans/fac;
+    if(src<1||src>5000)continue;
+    const ss=niceStr(src);if(!ss||ans>50000)continue;
+    return{srcVal:src,ans:String(ans),from,to};
   }
   return null;
 }
 
-function tryPairDecimal(small, large, map, goUp) {
-  const from = goUp ? small : large;
-  const to   = goUp ? large : small;
-  const factor = map[from] / map[to];
-  for (let i = 0; i < 500; i++) {
-    const whole = Math.floor(Math.random() * 100);
-    const frac  = FRACS[Math.floor(Math.random()*3)];
-    const ans   = whole + frac;
-    if (ans <= 0 || ans > 999) continue;
-    const src = ans / factor;
-    if (src < 1 || src > 5000) continue;
-    const srcStr = niceStr(src);
-    if (!srcStr) continue;
-    const ansStr = niceStr(ans);
-    if (!ansStr || !ansStr.includes(",")) continue;
-    return { srcVal:src, ans:ansStr, from, to };
+function tryPairDec(s,l,map,goUp){
+  const from=goUp?s:l,to=goUp?l:s,fac=map[from]/map[to];
+  for(let i=0;i<500;i++){
+    const ans=Math.floor(Math.random()*100)+FRACS[randInt(0,2)];
+    if(ans<=0||ans>999)continue;
+    const src=ans/fac;
+    if(src<1||src>5000)continue;
+    const ss=niceStr(src);if(!ss)continue;
+    const as=niceStr(ans);if(!as||!as.includes(','))continue;
+    return{srcVal:src,ans:as,from,to};
   }
   return null;
 }
 
-// Idő is 1/3 as likely as each other conversion category
-function pickConvCat(cats) {
-  const non = cats.filter(c => c !== "Idő");
-  const tw  = 1/3;
-  const tot = non.length + (cats.includes("Idő") ? tw : 0);
-  let r = Math.random() * tot;
-  for (const c of non) { r -= 1; if (r <= 0) return c; }
-  return "Idő";
+function pickConv(cats){
+  const non=cats.filter(c=>c!=='Idő'),tw=1/3,tot=non.length+(cats.includes('Idő')?tw:0);
+  let r=Math.random()*tot;
+  for(const c of non){r-=1;if(r<=0)return c;}
+  return'Idő';
 }
 
-function makeConvExercise(cats, dj, goUp, wantDecimal) {
-  const pool    = dj ? DOUBLE : SINGLE;
-  const primary = pickConvCat(cats);
-  const rest    = shuffle(cats.filter(c => c !== primary));
-  for (const cat of [primary, ...rest]) {
-    const map = CONV_UNITS[cat];
-    for (const [s,l] of shuffle(pool[cat]||[])) {
-      const r = wantDecimal
-        ? tryPairDecimal(s, l, map, goUp)
-        : tryPair(s, l, map, goUp);
-      if (!r) continue;
-      const srcStr = (cat === "Idő")
-        ? formatTimeSrc(r.srcVal, r.from)
-        : (niceStr(r.srcVal) + " " + r.from);
-      return { isGeo:false, srcStr, ans:r.ans, to:r.to, qLabel:null, goUp };
+function makeConv(cats,dj,goUp,dec){
+  const pool=dj?DOUBLE:SINGLE,pri=pickConv(cats),rest=shuffle(cats.filter(c=>c!==pri));
+  for(const cat of[pri,...rest]){
+    const map=CONV_UNITS[cat];
+    for(const[s,l]of shuffle(pool[cat]||[])){
+      const r=dec?tryPairDec(s,l,map,goUp):tryPair(s,l,map,goUp);
+      if(!r)continue;
+      const srcStr=cat==='Idő'?fmtTime(r.srcVal,r.from):niceStr(r.srcVal)+' '+r.from;
+      return{isGeo:false,srcStr,ans:r.ans,to:r.to,goUp};
     }
   }
-  if (dj)          return makeConvExercise(cats, false, goUp, wantDecimal);
-  if (wantDecimal) return makeConvExercise(cats, dj,    goUp, false);
-  return             makeConvExercise(cats, false, !goUp, false);
-}
-
-// ═══════════════════════════════════════════════════════
-//  GEOMETRY EXERCISE GENERATION
-// ═══════════════════════════════════════════════════════
-
-// Each generator returns { shape, given, ans, to, qLabel }
-// shape  = shape name string
-// given  = the given values string
-// ans    = answer as string
-// to     = answer unit
-// qLabel = what to find (T, K, a, b, c)
-
-const GEO_GENS = {
-
-  "Síkterület": shuffle([
-
-    // ── Négyzet ──────────────────────────────────────────
-
-    // T forward: given a, find T = a²
-    () => {
-      const a = randInt(2, 20);
-      return { shape:"Négyzet", given:`a = ${a} cm`, ans:String(a*a), to:"cm²", qLabel:"T" };
-    },
-    // T reverse: given T = a², find a
-    () => {
-      const a = randInt(2, 14);
-      return { shape:"Négyzet", given:`T = ${a*a} cm²`, ans:String(a), to:"cm", qLabel:"a" };
-    },
-
-    // ── Téglalap ─────────────────────────────────────────
-
-    // T forward: given a, b, find T = a×b
-    () => {
-      const a = randInt(2, 15), b = randInt(2, 15);
-      return { shape:"Téglalap", given:`a = ${a} cm,  b = ${b} cm`, ans:String(a*b), to:"cm²", qLabel:"T" };
-    },
-    // T reverse: given T and a, find b
-    () => {
-      const a = randInt(2, 12), b = randInt(2, 12);
-      return { shape:"Téglalap", given:`T = ${a*b} cm²,  a = ${a} cm`, ans:String(b), to:"cm", qLabel:"b" };
-    },
-    // T reverse: given T and b, find a  (same formula, different label)
-    () => {
-      const a = randInt(2, 12), b = randInt(2, 12);
-      return { shape:"Téglalap", given:`T = ${a*b} cm²,  b = ${b} cm`, ans:String(a), to:"cm", qLabel:"a" };
-    },
-
-  ]),
-
-  "Kerület": shuffle([
-
-    // ── Négyzet ──────────────────────────────────────────
-
-    // K forward: given a, find K = 4a
-    () => {
-      const a = randInt(2, 20);
-      return { shape:"Négyzet", given:`a = ${a} cm`, ans:String(4*a), to:"cm", qLabel:"K" };
-    },
-    // K reverse: given K, find a
-    () => {
-      const a = randInt(2, 15);
-      return { shape:"Négyzet", given:`K = ${4*a} cm`, ans:String(a), to:"cm", qLabel:"a" };
-    },
-
-    // ── Téglalap ─────────────────────────────────────────
-
-    // K forward: given a, b, find K = 2(a+b)
-    () => {
-      const a = randInt(2, 15), b = randInt(2, 15);
-      return { shape:"Téglalap", given:`a = ${a} cm,  b = ${b} cm`, ans:String(2*(a+b)), to:"cm", qLabel:"K" };
-    },
-    // K reverse: given K and a, find b
-    () => {
-      const a = randInt(2, 12), b = randInt(2, 12);
-      return { shape:"Téglalap", given:`K = ${2*(a+b)} cm,  a = ${a} cm`, ans:String(b), to:"cm", qLabel:"b" };
-    },
-    // K reverse: given K and b, find a
-    () => {
-      const a = randInt(2, 12), b = randInt(2, 12);
-      return { shape:"Téglalap", given:`K = ${2*(a+b)} cm,  b = ${b} cm`, ans:String(a), to:"cm", qLabel:"a" };
-    },
-
-    // ── Egyenlő oldalú háromszög ──────────────────────────
-
-    // K forward: given a, find K = 3a
-    () => {
-      const a = randInt(2, 20);
-      return { shape:"Egyenlő oldalú △", given:`a = ${a} cm`, ans:String(3*a), to:"cm", qLabel:"K" };
-    },
-    // K reverse: given K, find a
-    () => {
-      const a = randInt(2, 15);
-      return { shape:"Egyenlő oldalú △", given:`K = ${3*a} cm`, ans:String(a), to:"cm", qLabel:"a" };
-    },
-
-    // ── Egyenlő szárú háromszög ───────────────────────────
-    // a = leg (szár), b = base (alap);  K = 2a + b
-    // triangle inequality: b < 2a  (and b > 0, guaranteed)
-
-    // K forward: given a, b, find K = 2a+b
-    () => {
-      const a = randInt(3, 15);
-      const b = randInt(2, 2*a - 1);
-      return { shape:"Egyenlő szárú △", given:`a = ${a} cm (szár),  b = ${b} cm (alap)`, ans:String(2*a+b), to:"cm", qLabel:"K" };
-    },
-    // K reverse: given K and a, find b
-    () => {
-      const a = randInt(3, 12);
-      const b = randInt(2, 2*a - 1);
-      return { shape:"Egyenlő szárú △", given:`K = ${2*a+b} cm,  a = ${a} cm (szár)`, ans:String(b), to:"cm", qLabel:"b (alap)" };
-    },
-    // K reverse: given K and b, find a
-    () => {
-      const a = randInt(3, 12);
-      const b = randInt(2, 2*a - 1);
-      return { shape:"Egyenlő szárú △", given:`K = ${2*a+b} cm,  b = ${b} cm (alap)`, ans:String(a), to:"cm", qLabel:"a (szár)" };
-    },
-
-    // ── Általános háromszög ───────────────────────────────
-    // All three sides different, triangle inequality guaranteed
-
-    // K forward: given a, b, c, find K
-    () => {
-      let a, b, c, tries = 0;
-      do {
-        a = randInt(2,14); b = randInt(2,14); c = randInt(2,14); tries++;
-      } while ((a===b || b===c || a===c || a+b<=c || a+c<=b || b+c<=a) && tries<200);
-      return { shape:"Háromszög", given:`a = ${a} cm,  b = ${b} cm,  c = ${c} cm`, ans:String(a+b+c), to:"cm", qLabel:"K" };
-    },
-    // K reverse: given K, a, b; find c
-    () => {
-      let a, b, c, tries = 0;
-      do {
-        a = randInt(2,12); b = randInt(2,12); c = randInt(2,12); tries++;
-      } while ((a===b || b===c || a===c || a+b<=c || a+c<=b || b+c<=a) && tries<200);
-      return { shape:"Háromszög", given:`K = ${a+b+c} cm,  a = ${a} cm,  b = ${b} cm`, ans:String(c), to:"cm", qLabel:"c" };
-    },
-
-  ]),
-};
-
-function makeGeoExercise(cat) {
-  const gens = GEO_GENS[cat];
-  const ex   = gens[Math.floor(Math.random() * gens.length)]();
-  return { isGeo:true, cat, ...ex };
-}
-
-// ═══════════════════════════════════════════════════════
-//  QUIZ BUILDER
-// ═══════════════════════════════════════════════════════
-
-const GEO_CAT_NAMES = new Set(["Kerület", "Síkterület"]);
-
-function buildQuiz(cats) {
-  const convCats = cats.filter(c => !GEO_CAT_NAMES.has(c));
-  const geoCats  = cats.filter(c =>  GEO_CAT_NAMES.has(c));
-
-  return Array.from({length:20}, () => {
-    // Decide geo vs conversion, proportional to number of active categories each side
-    const useGeo = geoCats.length > 0 &&
-      (convCats.length === 0 || Math.random() < geoCats.length / cats.length);
-
-    if (useGeo) {
-      const cat = geoCats[Math.floor(Math.random() * geoCats.length)];
-      return makeGeoExercise(cat);
-    }
-    const dj          = Math.random() < 0.15;
-    const goUp        = Math.random() < 0.5;
-    const wantDecimal = Math.random() < 0.15;
-    return makeConvExercise(convCats, dj, goUp, wantDecimal);
-  });
+  if(dj)return makeConv(cats,false,goUp,dec);
+  if(dec)return makeConv(cats,dj,goUp,false);
+  return makeConv(cats,false,!goUp,false);
 }
 
 // ═══════════════════════════════════════════════════════
 //  STATE & SETTINGS
 // ═══════════════════════════════════════════════════════
+const GROUPS=[
+  {id:'conv',name:'Mértékegység-átváltások',sub:'Hosszúság, tömeg, térfogat, idő…',
+   cats:['Hosszúság','Terület','Térfogat','Tömeg','Idő']},
+  {id:'geo', name:'Terület és kerület',sub:'Négyzet, téglalap, háromszög',
+   cats:['Kerület','Síkterület']},
+];
+const GEO_CATS=new Set(['Kerület','Síkterület']);
 
-const ALL_CATS = ["Hosszúság", "Terület", "Térfogat", "Tömeg", "Idő", "Kerület", "Síkterület"];
-let activeCats = new Set(ALL_CATS);
-let exercises=[], qIdx=0, score=0, answered=false;
-const AUTO_MS = 700;
+let activeGroups=new Set(['conv','geo']);
+let showViz=true;
+let exercises=[],qIdx=0,score=0,answered=false;
+const AUTO_MS=700;
 
-function renderCats() {
-  const list = document.getElementById("cat-list");
-  list.innerHTML = "";
-  // Separator before geometry categories
-  ALL_CATS.forEach((cat, i) => {
-    if (i === 5) {
-      const sep = document.createElement("div");
-      sep.style.cssText = "font-size:12px;color:var(--muted);padding:4px 2px 2px;letter-spacing:.05em;text-transform:uppercase";
-      sep.textContent = "Síkidomok";
-      list.appendChild(sep);
-    }
-    const on = activeCats.has(cat);
-    const b  = document.createElement("button");
-    b.className = "cat-btn"+(on?" on":"");
-    b.innerHTML = `<span>${cat}</span>${on?'<span>✓</span>':''}`;
-    b.onclick   = () => toggleCat(cat);
+function activeCats(){return GROUPS.filter(g=>activeGroups.has(g.id)).flatMap(g=>g.cats)}
+
+// ─── settings render ──────────────────────────────────
+function renderGroups(){
+  const list=document.getElementById('group-list');
+  list.innerHTML='';
+  for(const g of GROUPS){
+    const on=activeGroups.has(g.id);
+    const b=document.createElement('button');
+    b.className='row-btn'+(on?' on':'');
+    b.innerHTML=`<div><div class="row-title">${g.name}</div><div class="row-sub">${g.sub}</div></div>`+
+                `<span class="row-check">${on?'✓':''}</span>`;
+    b.onclick=()=>toggleGroup(g.id);
     list.appendChild(b);
+  }
+  document.getElementById('start-btn').disabled=activeGroups.size===0;
+}
+
+function toggleGroup(id){
+  if(activeGroups.has(id)){if(activeGroups.size>1)activeGroups.delete(id);}
+  else activeGroups.add(id);
+  renderGroups();
+}
+
+function toggleViz(){
+  showViz=!showViz;
+  const btn=document.getElementById('viz-btn');
+  btn.classList.toggle('on',showViz);
+  document.getElementById('viz-check').textContent=showViz?'✓':'';
+}
+
+// ─── screen ───────────────────────────────────────────
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById('screen-'+id).classList.add('active');
+}
+
+// ─── quiz build ───────────────────────────────────────
+function buildQuiz(){
+  const all=activeCats();
+  const conv=all.filter(c=>!GEO_CATS.has(c));
+  const geo =all.filter(c=> GEO_CATS.has(c));
+  return Array.from({length:20},()=>{
+    const useGeo=geo.length>0&&(conv.length===0||Math.random()<geo.length/all.length);
+    if(useGeo){
+      const cat=geo[randInt(0,geo.length-1)];
+      const gens=GEO[cat];
+      return gens[randInt(0,gens.length-1)]();
+    }
+    return makeConv(conv,Math.random()<0.15,Math.random()<0.5,Math.random()<0.15);
   });
-  document.getElementById("start-btn").disabled = activeCats.size===0;
 }
 
-function toggleCat(cat) {
-  if (activeCats.has(cat)) { if (activeCats.size>1) activeCats.delete(cat); }
-  else activeCats.add(cat);
-  renderCats();
+// ─── quiz render ──────────────────────────────────────
+function startQuiz(){
+  exercises=buildQuiz();qIdx=0;score=0;
+  showScreen('quiz');renderQ();
 }
 
-// ═══════════════════════════════════════════════════════
-//  SCREENS
-// ═══════════════════════════════════════════════════════
+function renderQ(){
+  answered=false;
+  const ex=exercises[qIdx];
+  document.getElementById('prog-fill').style.width=(qIdx/20*100)+'%';
+  document.getElementById('prog-label').textContent=(qIdx+1)+'/20';
 
-function showScreen(id) {
-  document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
-  document.getElementById("screen-"+id).classList.add("active");
-}
+  const top=document.getElementById('q-top');
+  const viz=document.getElementById('q-viz');
+  const arrow=document.getElementById('q-arrow');
+  const target=document.getElementById('q-target');
 
-// ═══════════════════════════════════════════════════════
-//  QUIZ FLOW
-// ═══════════════════════════════════════════════════════
-
-function startQuiz() {
-  exercises = buildQuiz([...activeCats]);
-  qIdx=0; score=0;
-  showScreen("quiz");
-  renderQ();
-}
-
-function renderQ() {
-  answered = false;
-  const ex  = exercises[qIdx];
-
-  document.getElementById("prog-fill").style.width  = (qIdx/20*100)+"%";
-  document.getElementById("prog-label").textContent = (qIdx+1)+"/20";
-
-  const srcArea = document.getElementById("q-source-area");
-  const arrow   = document.getElementById("q-arrow");
-  const target  = document.getElementById("q-target");
-
-  if (ex.isGeo) {
-    srcArea.innerHTML =
-      `<div class="geo-shape">${ex.shape}</div>` +
-      `<div class="geo-given">${ex.given}</div>`;
-    arrow.textContent  = "→";
-    target.textContent = `${ex.qLabel} = _______ ${ex.to}`;
-  } else {
-    srcArea.innerHTML  = `<div class="q-source">${ex.srcStr}</div>`;
-    arrow.textContent  = ex.goUp ? "↑" : "↓";
-    target.textContent = `= _______ ${ex.to}`;
+  if(ex.isGeo){
+    const vizHtml=(showViz&&ex.viz)?makeViz(ex.viz):'';
+    // Show the given text when viz is off, OR when the SVG doesn't carry all given info.
+    // Terület-reverse: T is drawn inside the shape → no text needed.
+    // Kerület-reverse: K is never drawn on the shape → always show text.
+    const needsGiven=!vizHtml||(ex.viz&&ex.viz.in==null&&ex.qLabel!=='K'&&ex.qLabel!=='T');
+    top.innerHTML=`<div class="geo-label">${ex.shape}</div>`+
+                  (needsGiven?`<div class="geo-given">${ex.given}</div>`:'');
+    viz.innerHTML=vizHtml;
+    arrow.textContent='→';
+    target.textContent=`${ex.qLabel} = _______ ${ex.to}`;
+  }else{
+    top.innerHTML=`<div class="q-source">${ex.srcStr}</div>`;
+    viz.innerHTML='';
+    arrow.textContent=ex.goUp?'↑':'↓';
+    target.textContent=`= _______ ${ex.to}`;
   }
 
-  const inp = document.getElementById("answer-input");
-  inp.value = "";
-  document.getElementById("input-row").style.display  = "";
-  document.getElementById("feedback").style.display   = "none";
-  document.getElementById("next-btn").style.display   = "none";
-  document.getElementById("score-mini").textContent   =
-    score+" helyes / "+qIdx+" kérdés";
+  const inp=document.getElementById('answer-input');
+  inp.value='';
+  document.getElementById('input-row').style.display='';
+  document.getElementById('feedback').style.display='none';
+  document.getElementById('next-btn').style.display='none';
+  document.getElementById('score-mini').textContent=`${score} helyes / ${qIdx} kérdés`;
   inp.focus();
 }
 
-function submitAnswer() {
-  if (answered) return;
-  const raw = document.getElementById("answer-input").value;
-  if (!raw.trim()) return;
-  answered = true;
+function submitAnswer(){
+  if(answered)return;
+  const raw=document.getElementById('answer-input').value;
+  if(!raw.trim())return;
+  answered=true;
+  const ex=exercises[qIdx];
+  const uv=parseNum(raw),cv=parseNum(ex.ans);
+  const ok=isFinite(uv)&&Math.abs(uv-cv)<1e-9;
+  if(ok)score++;
 
-  const ex  = exercises[qIdx];
-  const uv  = parseInput(raw);
-  const cv  = parseInput(ex.ans);
-  const ok  = isFinite(uv) && Math.abs(uv - cv) < 1e-9;
-  if (ok) score++;
+  const fb=document.getElementById('feedback');
+  fb.className='feedback '+(ok?'ok':'err');
+  fb.style.display='flex';
+  fb.innerHTML=ok
+    ?'<span>✓</span><span>Helyes!</span>'
+    :`<span>✗</span><span>Helytelen – helyes válasz: <strong>${ex.ans} ${ex.to}</strong></span>`;
 
-  const fb = document.getElementById("feedback");
-  fb.className  = "feedback "+(ok?"ok":"err");
-  fb.style.display = "flex";
-  fb.innerHTML  = ok
-    ? `<span>✓</span><span>Helyes!</span>`
-    : `<span>✗</span><span>Helytelen – helyes válasz: <strong>${ex.ans} ${ex.to}</strong></span>`;
+  document.getElementById('input-row').style.display='none';
+  document.getElementById('score-mini').textContent=`${score} helyes / ${qIdx+1} kérdés`;
 
-  document.getElementById("input-row").style.display = "none";
-  document.getElementById("score-mini").textContent  =
-    score+" helyes / "+(qIdx+1)+" kérdés";
-
-  if (ok) {
-    setTimeout(nextQuestion, AUTO_MS);
-  } else {
-    const nb = document.getElementById("next-btn");
-    nb.textContent   = (qIdx+1>=20) ? "Eredmény →" : "Következő →";
-    nb.style.display = "";
+  if(ok){setTimeout(nextQuestion,AUTO_MS);}
+  else{
+    const nb=document.getElementById('next-btn');
+    nb.textContent=qIdx+1>=20?'Eredmény →':'Következő →';
+    nb.style.display='';
   }
 }
 
-function nextQuestion() {
+function nextQuestion(){
   qIdx++;
-  if (qIdx>=20) {
-    showScreen("result");
-    const pct = Math.round(score/20*100);
-    document.getElementById("result-medal").textContent =
-      pct>=90?"🥇":pct>=70?"🥈":pct>=50?"🥉":"💪";
-    document.getElementById("result-score").textContent = score+" / 20 pont";
-    document.getElementById("result-pct").textContent   = pct+"% helyes";
-  } else {
-    renderQ();
-  }
+  if(qIdx>=20){
+    showScreen('result');
+    const pct=Math.round(score/20*100);
+    document.getElementById('result-medal').textContent=pct>=90?'🥇':pct>=70?'🥈':pct>=50?'🥉':'💪';
+    document.getElementById('result-score').textContent=`${score} / 20 pont`;
+    document.getElementById('result-pct').textContent=`${pct}% helyes`;
+  }else renderQ();
 }
 
-function handleKey(e) {
-  if (e.key==="Enter" && !answered) submitAnswer();
+function handleKey(e){if(e.key==='Enter'&&!answered)submitAnswer();}
+
+// ─── keyboard detection ───────────────────────────────
+if(window.visualViewport){
+  const chk=()=>document.body.classList.toggle('kb',
+    window.visualViewport.height/window.screen.height<0.65);
+  window.visualViewport.addEventListener('resize',chk);chk();
 }
 
-// ── Virtual keyboard detection ────────────────────────
-if (window.visualViewport) {
-  const check = () =>
-    document.body.classList.toggle("kb",
-      window.visualViewport.height / window.screen.height < 0.65);
-  window.visualViewport.addEventListener("resize", check);
-  check();
-}
-
-renderCats();
+// ─── init ─────────────────────────────────────────────
+renderGroups();
+document.getElementById('viz-btn').classList.add('on');
 </script>
 <script data-goatcounter="https://huvagoc.goatcounter.com/count"
         async src="//gc.zgo.at/count.js"></script>
