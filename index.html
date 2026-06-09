@@ -208,6 +208,9 @@ body.kb .screen{gap:.5rem}
       <span style="opacity:.4"> · </span>
       <a href="https://revolut.me/huvagoc" target="_blank" rel="noopener"
          style="color:var(--muted);text-decoration:none;opacity:.7">💸 Revolut</a>
+      <span style="opacity:.4"> · </span>
+      <a href="mailto:matek-kviz@pm.me"
+         style="color:var(--muted);text-decoration:none;opacity:.7">✉️ Visszajelzés</a>
     </div>
     <div style="text-align:center;font-size:11px;color:var(--muted);opacity:.5;margin-top:8px">
       © 2026 Vágó Csaba –
@@ -293,6 +296,37 @@ function niceStr(v){
   return null;
 }
 function parseNum(s){return parseFloat(String(s).trim().replace(',','.'))}
+
+// ── fraction helpers ──────────────────────────────────
+function gcd(a,b){a=Math.abs(a);b=Math.abs(b);while(b){[a,b]=[b,a%b];}return a;}
+function lcm(a,b){return Math.abs(a*b)/gcd(a,b);}
+// Parse "a/b", "a", or "n a/b" (mixed number) → {n,d} or null
+function parseFrac(s){
+  s=String(s).trim();
+  const mx=s.match(/^(-?\d+)\s+(\d+)\/(\d+)$/);
+  if(mx){const w=parseInt(mx[1]),n=parseInt(mx[2]),d=parseInt(mx[3]);if(d===0)return null;return{n:w*d+n,d};}
+  const fx=s.match(/^(-?\d+)\/(\d+)$/);
+  if(fx){const n=parseInt(fx[1]),d=parseInt(fx[2]);if(d===0)return null;return{n,d};}
+  const iv=parseInt(s);if(!isNaN(iv))return{n:iv,d:1};
+  return null;
+}
+function reduceFrac(n,d){if(d<0){n=-n;d=-d;}const g=gcd(Math.abs(n),d);return{n:n/g,d:d/g};}
+function fmtFrac(n,d){return d===1?String(n):`${n}/${d}`;}
+function fracEq(n1,d1,n2,d2){return n1*d2===n2*d1;}
+// Returns 'exact' | 'unsimplified' | 'wrong'
+function checkFracAnswer(raw,ansN,ansD){
+  const s=String(raw).trim();
+  let un,ud;
+  const mx=s.match(/^(-?\d+)\s+(\d+)\/(\d+)$/);
+  if(mx){const w=parseInt(mx[1]),n=parseInt(mx[2]),d=parseInt(mx[3]);if(d===0)return'wrong';un=w*d+n;ud=d;}
+  else{const fx=s.match(/^(-?\d+)\/(\d+)$/);
+    if(fx){un=parseInt(fx[1]);ud=parseInt(fx[2]);if(ud===0)return'wrong';}
+    else{const iv=parseInt(s);if(!isNaN(iv)){un=iv;ud=1;}else return'wrong';}}
+  if(!fracEq(un,ud,ansN,ansD))return'wrong';
+  if(gcd(Math.abs(un),ud)===1)return'exact';
+  return'unsimplified';
+}
+
 // ── seeded PRNG (xorshift32) ──────────────────────────
 let _seed=1;
 function _rng(){_seed^=_seed<<13;_seed^=_seed>>17;_seed^=_seed<<5;return((_seed>>>0)/4294967296)}
@@ -1087,57 +1121,124 @@ const ARANYPL=[
   },
 ];
 
+// ── Fraction arithmetic helper ────────────────────────
+// Returns an exercise object that uses fraction answer checking
+function fracEx(prompt, resN, resD){
+  const r=reduceFrac(resN,resD);
+  return{isArith:true,isGeo:false,isWord:false,isFrac:true,
+         srcStr:prompt,ans:fmtFrac(r.n,r.d),ansN:r.n,ansD:r.d,to:'',goUp:true};
+}
+// Pick a "nice" denominator pair for exercises
+const DENS=[2,3,4,5,6,8,10,12];
+function randDen(){return randChoice(DENS);}
+// Format a mixed-number operand display: "w a/b" but store as improper n/d
+function mixedStr(w,n,d){return`${w} ${n}/${d}`;}
+
 // ── Törtek ────────────────────────────────────────────
 const TORTTPL=[
   ()=>{
-    // egyszerűsítés
-    const d=randChoice([2,3,4,5,6]);
+    // egyszerűsítés — show an unreduced fraction, student writes the simplified form
+    const d=randChoice([2,3,4,5,6,8,10,12]);
     const n=randInt(1,d-1);
-    const g=(x,y)=>{while(y){[x,y]=[y,x%y];}return x;};
-    const gc=g(n,d);
-    return arith(`Egyszerűsítsd: ${n*2}/${d*2} = ?/${d/gc*gc}  (nevező: ${d/gc})`, Math.round(n/gc), '');
+    if(gcd(n,d)===1)return null; // already reduced — retry
+    const mult=randChoice([2,3,4].filter(m=>m*d<=60));
+    if(!mult)return null;
+    return fracEx(`Egyszerűsítsd: ${n*mult}/${d*mult} = ?`, n, d);
   },
   ()=>{
-    // összeadás azonos nevező
-    const den=randChoice([4,5,6,8,10]);
-    const a=randInt(1,den-1),b=randInt(1,den-a);
-    const sum=a+b;
-    return arith(`${a}/${den} + ${b}/${den} = ?/${den}`, sum, `/${den}`);
-  },
-  ()=>{
-    // kivonás azonos nevező
-    const den=randChoice([4,5,6,8,10]);
-    const b=randInt(1,den-1),a=randInt(b+1,den);
-    return arith(`${a}/${den} − ${b}/${den} = ?/${den}`, a-b, `/${den}`);
-  },
-  ()=>{
-    // törtrész: W * (1/den)
+    // törtrész: W * (1/den) (existing, numeric answer)
     const den=randChoice([2,3,4,5]);
     const part=randInt(2,10);
     const W=part*den;
-    return arith(`${W} darab ${den === 2?'fele':den===3?'harmada':den===4?'negyede':'ötöde'} = ?`, part, '');
+    return arith(`${W} darab ${den===2?'fele':den===3?'harmada':den===4?'negyede':'ötöde'} = ?`, part, '');
   },
   ()=>{
-    // melyik nagyobb? → write the larger fraction's numerator (same denominator after conversion)
+    // melyik nagyobb? → student writes the full larger fraction, e.g. "9/10"
     const den1=randChoice([2,3,4,5,6,8,10]);
     const num1=randInt(1,den1-1);
     const den2=randChoice([2,3,4,5,6,8,10].filter(d=>d!==den1));
     const num2=randInt(1,den2-1);
-    // express both over common denominator so student writes a real number
-    const lcm=(a,b)=>{let x=a,y=b;while(y){[x,y]=[y,x%y];}return a*b/x;};
     const cd=lcm(den1,den2);
-    const n1=num1*(cd/den1), n2=num2*(cd/den2);
-    const larger=n1>n2?`${num1}/${den1}`:`${num2}/${den2}`;
-    const largerNum=n1>n2?num1:num2, largerDen=n1>n2?den1:den2;
-    // answer: numerator over common denom — simpler: just ask them to write the larger fraction's numerator
-    // Actually cleanest: write the larger fraction as "num/den" → accept numerator, show unit /den
-    return arith(`Melyik a nagyobb tört?\n${num1}/${den1}  vagy  ${num2}/${den2}`, largerNum, `/${largerDen}`);
+    const n1=num1*(cd/den1),n2=num2*(cd/den2);
+    if(n1===n2)return null; // equal — retry
+    const ansN=n1>n2?num1:num2, ansD=n1>n2?den1:den2;
+    return fracEx(`Melyik a nagyobb tört?\n${num1}/${den1}  vagy  ${num2}/${den2}`, ansN, ansD);
   },
+
+  // ── összeadás azonos nevező ───────────────────────────
   ()=>{
-    // egész és tört összeadása
-    const w=randInt(1,5),den=randChoice([2,3,4,5]);
-    const n=randInt(1,den-1);
-    return arith(`${w} + ${n}/${den} = ?`, w*den+n, `/${den}`);
+    const d=randDen();
+    const a=randInt(1,d*2-1),b=randInt(1,d);
+    return fracEx(`${a}/${d} + ${b}/${d} = ?`, a+b, d);
+  },
+  // ── kivonás azonos nevező ────────────────────────────
+  ()=>{
+    const d=randDen();
+    const b=randInt(1,d-1),a=randInt(b+1,d*2);
+    return fracEx(`${a}/${d} − ${b}/${d} = ?`, a-b, d);
+  },
+  // ── összeadás különböző nevező ───────────────────────
+  ()=>{
+    const d1=randDen(),d2=randChoice(DENS.filter(d=>d!==d1));
+    const a=randInt(1,d1*2-1),b=randInt(1,d2*2-1);
+    const cd=lcm(d1,d2);
+    return fracEx(`${a}/${d1} + ${b}/${d2} = ?`, a*(cd/d1)+b*(cd/d2), cd);
+  },
+  // ── kivonás különböző nevező ─────────────────────────
+  ()=>{
+    const d1=randDen(),d2=randChoice(DENS.filter(d=>d!==d1));
+    const a=randInt(1,d1*2),b=randInt(1,d2*2-1);
+    const cd=lcm(d1,d2);
+    const rn=a*(cd/d1)-b*(cd/d2);
+    if(rn<=0)return null; // retry
+    return fracEx(`${a}/${d1} − ${b}/${d2} = ?`, rn, cd);
+  },
+  // ── szorzás egész számmal ────────────────────────────
+  ()=>{
+    const d=randDen(),n=randInt(1,d-1),w=randInt(2,6);
+    return fracEx(`${n}/${d} × ${w} = ?`, n*w, d);
+  },
+  // ── osztás egész számmal ─────────────────────────────
+  ()=>{
+    const d=randDen(),w=randChoice([2,3,4]);
+    const n=randInt(1,12);
+    return fracEx(`${n}/${d} ÷ ${w} = ?`, n, d*w);
+  },
+  // ── vegyes szám + tört, azonos nevező ───────────────
+  ()=>{
+    const d=randDen();
+    const w=randInt(1,5),fn=randInt(1,d-1); // mixed: w fn/d
+    const b=randInt(1,d-1);
+    const impN=w*d+fn;
+    return fracEx(`${mixedStr(w,fn,d)} + ${b}/${d} = ?`, impN+b, d);
+  },
+  // ── vegyes szám + tört, különböző nevező ─────────────
+  ()=>{
+    const d1=randDen(),d2=randChoice(DENS.filter(d=>d!==d1));
+    const w=randInt(1,4),fn=randInt(1,d1-1);
+    const b=randInt(1,d2-1);
+    const cd=lcm(d1,d2);
+    const impN=w*d1+fn;
+    return fracEx(`${mixedStr(w,fn,d1)} + ${b}/${d2} = ?`, impN*(cd/d1)+b*(cd/d2), cd);
+  },
+  // ── vegyes szám − tört, azonos nevező ───────────────
+  ()=>{
+    const d=randDen();
+    const w=randInt(1,5),fn=randInt(1,d-1);
+    const b=randInt(1,w*d+fn-1); // ensure positive result
+    const impN=w*d+fn;
+    return fracEx(`${mixedStr(w,fn,d)} − ${b}/${d} = ?`, impN-b, d);
+  },
+  // ── vegyes szám − tört, különböző nevező ─────────────
+  ()=>{
+    const d1=randDen(),d2=randChoice(DENS.filter(d=>d!==d1));
+    const w=randInt(2,5),fn=randInt(1,d1-1);
+    const b=randInt(1,d2-1);
+    const cd=lcm(d1,d2);
+    const impN=w*d1+fn;
+    const rn=impN*(cd/d1)-b*(cd/d2);
+    if(rn<=0)return null;
+    return fracEx(`${mixedStr(w,fn,d1)} − ${b}/${d2} = ?`, rn, cd);
   },
 ];
 
@@ -1272,7 +1373,9 @@ function renderQ(){
     viz.innerHTML='';
     tog.style.display='none';
     arrow.textContent='→';
-    target.textContent=`= _______ ${ex.to}`;
+    target.textContent=ex.isFrac?'= ?':'= _______ '+ex.to;
+    inp.placeholder=ex.isFrac?'pl. 3/4 vagy 17/8':'Válasz…';
+    inp.inputMode=ex.isFrac?'text':'decimal';
   } else if(ex.isGeo){
     showViz=false;   // always start hidden; user can reveal with the toggle
     const vizHtml=(showViz&&ex.viz)?makeViz(ex.viz):'';
@@ -1284,12 +1387,14 @@ function renderQ(){
     updateVizTog();
     arrow.textContent='→';
     target.textContent=`${ex.qLabel} = _______ ${ex.to}`;
+    inp.placeholder='Válasz…';inp.inputMode='decimal';
   } else {
     top.innerHTML=`<div class="q-source">${ex.srcStr}</div>`;
     viz.innerHTML='';
     tog.style.display='none';
     arrow.textContent=ex.goUp?'↑':'↓';
     target.textContent=`= _______ ${ex.to}`;
+    inp.placeholder='Válasz…';inp.inputMode='decimal';
   }
 
   inp.focus();
@@ -1301,21 +1406,40 @@ function submitAnswer(){
   if(!raw.trim())return;
   answered=true;
   const ex=exercises[qIdx];
-  const uv=parseNum(raw),cv=parseNum(ex.ans);
-  const ok=isFinite(uv)&&Math.abs(uv-cv)<1e-9;
-  if(ok)score++;
 
   const fb=document.getElementById('feedback');
+  let ok=false,msg='',result='';
+
+  if(ex.isFrac){
+    result=checkFracAnswer(raw,ex.ansN,ex.ansD);
+    if(result==='exact'){
+      ok=true;
+      msg='<span>✓</span><span>Helyes!</span>';
+    } else if(result==='unsimplified'){
+      ok=true; // counts as correct
+      msg=`<span>✓</span><span>Helyes! Egyszerűsítve: <strong>${ex.ans}</strong></span>`;
+    } else {
+      ok=false;
+      msg=`<span>✗</span><span>Helytelen – helyes válasz: <strong>${ex.ans}</strong></span>`;
+    }
+  } else {
+    const uv=parseNum(raw),cv=parseNum(ex.ans);
+    ok=isFinite(uv)&&Math.abs(uv-cv)<1e-9;
+    msg=ok
+      ?'<span>✓</span><span>Helyes!</span>'
+      :`<span>✗</span><span>Helytelen – helyes válasz: <strong>${ex.ans} ${ex.to}</strong></span>`;
+  }
+
+  if(ok)score++;
   fb.className='feedback '+(ok?'ok':'err');
   fb.style.display='flex';
-  fb.innerHTML=ok
-    ?'<span>✓</span><span>Helyes!</span>'
-    :`<span>✗</span><span>Helytelen – helyes válasz: <strong>${ex.ans} ${ex.to}</strong></span>`;
+  fb.innerHTML=msg;
 
   document.getElementById('input-row').style.display='none';
   document.getElementById('score-mini').textContent=`${score} helyes / ${qIdx+1} kérdés`;
 
-  if(ok){setTimeout(nextQuestion,AUTO_MS);}
+  const autoAdvance = ok && result!=='unsimplified';
+  if(autoAdvance){setTimeout(nextQuestion,AUTO_MS);}
   else{
     const nb=document.getElementById('next-btn');
     nb.textContent=qIdx+1>=20?'Eredmény →':'Következő →';
@@ -1361,13 +1485,13 @@ function printWorksheet(){
     const item = document.createElement('div');
     item.className = 'print-item';
     if(ex.isWord) item.classList.add('wide');
-    if(ex.isArith) item.classList.add('wide');
+    if(ex.isArith && !ex.isFrac && (ex.srcStr||'').includes('\n')) item.classList.add('wide');
     
     let html = `<div class="print-num">${i + 1}. feladat</div>`;
     
     if (ex.isWord || ex.isArith) {
       html += `<div class="print-text">${(ex.srcStr||'').replace(/\n/g,'<br>')}</div>`;
-      html += `<div class="print-target">= _______ ${ex.to}</div>`;
+      html += `<div class="print-target">= _______ ${ex.isFrac?'':ex.to}</div>`;
     } else if (ex.isGeo) {
       html += `<div class="print-label">${ex.shape}</div>`;
       if (ex.viz) {
