@@ -1129,8 +1129,16 @@ function fracEx(prompt, resN, resD){
          srcStr:prompt,ans:fmtFrac(r.n,r.d),ansN:r.n,ansD:r.d,to:'',goUp:true};
 }
 // Pick a "nice" denominator pair for exercises
-const DENS=[2,3,4,5,6,8,10,12];
+const DENS=[2,3,4,5,6,7,8,9,10,12,14,15,16,18,20,21,24,25,28,30];
 function randDen(){return randChoice(DENS);}
+// Strictly non-trivial pairs: neither denominator divides the other
+function randDenPair(){
+  for(let i=0;i<200;i++){
+    const d1=randDen(),d2=randDen();
+    if(d1!==d2&&d1%d2!==0&&d2%d1!==0) return[d1,d2];
+  }
+  return[4,6];
+}
 // Format a mixed-number operand display: "w a/b" but store as improper n/d
 function mixedStr(w,n,d){return`${w} ${n}/${d}`;}
 
@@ -1173,30 +1181,16 @@ const TORTTPL=[
     return fracEx(`Melyik a nagyobb tört?\n${num1}/${den1}  vagy  ${num2}/${den2}`, ansN, ansD);
   },
 
-  // ── összeadás azonos nevező ───────────────────────────
-  ()=>{
-    const d=randDen();
-    const a=randNumer(d),b=randNumer(d);
-    return fracEx(`${a}/${d} + ${b}/${d} = ?`, a+b, d);
-  },
-  // ── kivonás azonos nevező ────────────────────────────
-  ()=>{
-    const d=randDen();
-    const a=randNumer(d),b=randNumer(d);
-    if(a===b)return null;
-    const [hi,lo]=[Math.max(a,b),Math.min(a,b)];
-    return fracEx(`${hi}/${d} − ${lo}/${d} = ?`, hi-lo, d);
-  },
   // ── összeadás különböző nevező ───────────────────────
   ()=>{
-    const d1=randDen(),d2=randChoice(DENS.filter(d=>d!==d1));
+    const [d1,d2]=randDenPair();
     const a=randNumer(d1),b=randNumer(d2);
     const cd=lcm(d1,d2);
     return fracEx(`${a}/${d1} + ${b}/${d2} = ?`, a*(cd/d1)+b*(cd/d2), cd);
   },
   // ── kivonás különböző nevező ─────────────────────────
   ()=>{
-    const d1=randDen(),d2=randChoice(DENS.filter(d=>d!==d1));
+    const [d1,d2]=randDenPair();
     const a=randNumer(d1),b=randNumer(d2);
     const cd=lcm(d1,d2);
     const rn=a*(cd/d1)-b*(cd/d2);
@@ -1214,34 +1208,18 @@ const TORTTPL=[
     const n=randInt(1,12);
     return fracEx(`${n}/${d} ÷ ${w} = ?`, n, d*w);
   },
-  // ── vegyes szám + tört, azonos nevező ───────────────
-  ()=>{
-    const d=randDen();
-    const w=randInt(1,5),fn=randInt(1,d-1); // mixed: w fn/d
-    const b=randInt(1,d-1);
-    const impN=w*d+fn;
-    return fracEx(`${mixedStr(w,fn,d)} + ${b}/${d} = ?`, impN+b, d);
-  },
   // ── vegyes szám + tört, különböző nevező ─────────────
   ()=>{
-    const d1=randDen(),d2=randChoice(DENS.filter(d=>d!==d1));
+    const [d1,d2]=randDenPair();
     const w=randInt(1,4),fn=randInt(1,d1-1);
     const b=randInt(1,d2-1);
     const cd=lcm(d1,d2);
     const impN=w*d1+fn;
     return fracEx(`${mixedStr(w,fn,d1)} + ${b}/${d2} = ?`, impN*(cd/d1)+b*(cd/d2), cd);
   },
-  // ── vegyes szám − tört, azonos nevező ───────────────
-  ()=>{
-    const d=randDen();
-    const w=randInt(1,5),fn=randInt(1,d-1);
-    const b=randInt(1,w*d+fn-1); // ensure positive result
-    const impN=w*d+fn;
-    return fracEx(`${mixedStr(w,fn,d)} − ${b}/${d} = ?`, impN-b, d);
-  },
   // ── vegyes szám − tört, különböző nevező ─────────────
   ()=>{
-    const d1=randDen(),d2=randChoice(DENS.filter(d=>d!==d1));
+    const [d1,d2]=randDenPair();
     const w=randInt(2,5),fn=randInt(1,d1-1);
     const b=randInt(1,d2-1);
     const cd=lcm(d1,d2);
