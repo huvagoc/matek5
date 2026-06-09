@@ -1,44 +1,61 @@
-# 5. osztály – Matematika kvíz
+# 🧮 Matek kvíz — 5. osztály
 
-Böngészőben futó, offline használható feladatsor 5. osztályos matematikához. Egyetlen fájl, telepítés nélkül – telefonon és PC-n egyaránt.
+Böngészőalapú, offline-képes matematika kvízalkalmazás 5. osztályos tanulók számára.
 
-🔗 **[Megnyitás](https://huvagoc.github.io/matek5)**
+**Élő:** https://huvagoc.github.io/matek5  
+**Repo:** https://github.com/huvagoc/matek5
+
+---
+
+## Mi ez?
+
+Egyetlen HTML-fájl, amely véletlenszerű matematika feladatokat generál az 5. osztályos tananyag hat témakörére. Nincs telepítés, nincs bejelentkezés — csak megnyitod és oldasz feladatokat.
+
+A kvíz 20 kérdésből áll. A végén pontszámot és százalékot mutat. Visszajelzés minden kérdés után azonnal jelenik meg.
 
 ---
 
 ## Témakörök
 
-A feladatok hat, tantervi fejezetekhez igazított csoportba vannak rendezve:
+| Csoport | Tartalma |
+|---|---|
+| 🔢 Számelmélet | Helyiérték, kerekítés, oszthatóság (LNKO/LKT), negatív számok |
+| ➕ Műveletek | Alapműveletek, egyenletek, szöveges feladatok, arányosság |
+| ½ Törtek | Törtek egyszerűsítése, összeadás/kivonás/szorzás/osztás; tizedes törtek |
+| 📐 Geometria | Kerület, síkterület, testek felülete és térfogata (téglatest, kocka) |
+| 📏 Mérés | Mértékegység-átváltás: hosszúság, terület, térfogat, tömeg, idő |
+| 📊 Statisztika | Átlag, medián, terjedelem |
 
-**🔢 Számelmélet és számfogalom**
-Helyiérték, kerekítés, oszthatóság, negatív számok.
-
-**➕ Műveletek és algebrai gondolkodás**
-Alapműveletek, egyszerű egyenletek, szöveges feladatok, arányosság.
-
-**½ Törtek és tizedes törtek**
-Törtek összehasonlítása, egyszerűsítés, összeadás/kivonás; tizedes törtek.
-
-**📐 Geometria**
-Kerület és terület (négyzet, téglalap, háromszögek); felszín és térfogat (téglatest, kocka). SVG-rajzzal.
-
-**📏 Mérés**
-Mértékegység-átváltások: hosszúság, terület, térfogat, tömeg, idő. Kétirányú feladatok, dupla ugrás, tizedes értékek.
-
-**📊 Statisztika és valószínűség**
-Átlag kiszámítása, adatok értelmezése.
+A témakörök be- és kikapcsolhatók a beállítások képernyőn.
 
 ---
 
-## Hogyan működik
+## Nyomtatás / PDF-munkafüzet
 
-- 20 kérdéses kvíz, a kiválasztott témakörök arányosan keverednek
-- Helyes válasznál automatikus továbblépés, hibánál „Következő" gomb jelenik meg
-- Tizedes elválasztóként vessző és pont is elfogadott; megjelenítés mindig vesszővel
-- Mobilbarát: virtuális billentyűzet megjelenésekor a kártya automatikusan kompaktabbá válik
-- Sötét mód automatikusan az eszköz beállítása alapján
+A **Nyomtatás (PDF)** gomb 20 feladatot generál - az aktív témakörökben - nyomtatható formában, két hasábos elrendezésben. A lapon megjelenik egy rövid kód (pl. `A3F7B-3F`). Ezt a kódot beírva a kvíz főoldalán visszakapod a megoldásokat — így a tanár kézzel is ellenőrizhet.
 
-## PDF / Nyomtatás
+---
 
-- A kezdőképernyőn „Nyomtatás (PDF)" gomb generál egy 20 kérdéses feladatsort a bekapcsolt témakörökből
-- A fájlnév automatikusan tartalmazza a dátumot és időt (pl. `Matek_07-14-32-05.pdf`)
+## Technikai adatok
+
+- Egyetlen `index.html` fájl — keretrendszer, npm vagy build eszköz nélkül
+- Teljesen offline működik (nincs hálózati függőség futásidőben)
+- Reszponzív: mobil és asztali képernyőn egyaránt használható
+- Automatikus sötét mód (`prefers-color-scheme`)
+- Seeded PRNG (xorshift32): minden nyomtatott feladatlap reprodukálható a kódja alapján
+- Analytics: GoatCounter (privacy-friendly, nincs süti)
+
+---
+
+## Licensz
+
+© 2026 Vágó Csaba — [CC BY-NC 4.0](https://creativecommons.org/licenses/by-nc/4.0/)  
+Nem kereskedelmi célra szabadon felhasználható, a szerző megjelölésével.
+
+---
+
+## Támogatás
+
+Ha hasznos volt, megköszönöm:  
+☕ [buymeacoffee.com/huvagoc](https://buymeacoffee.com/huvagoc) · 💸 [revolut.me/huvagoc](https://revolut.me/huvagoc)  
+✉️ Visszajelzés: matek-kviz@pm.me
