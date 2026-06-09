@@ -1134,6 +1134,14 @@ function randDen(){return randChoice(DENS);}
 // Format a mixed-number operand display: "w a/b" but store as improper n/d
 function mixedStr(w,n,d){return`${w} ${n}/${d}`;}
 
+// Pick a numerator with varying difficulty: ~40% small proper, ~35% larger, ~25% two-digit
+function randNumer(d){
+  const r=_rng();
+  if(r<0.40) return randInt(1,Math.max(1,d-1));
+  if(r<0.75) return randInt(d,d*3);
+  return randInt(10,30);
+}
+
 // ── Törtek ────────────────────────────────────────────
 const TORTTPL=[
   ()=>{
@@ -1168,29 +1176,31 @@ const TORTTPL=[
   // ── összeadás azonos nevező ───────────────────────────
   ()=>{
     const d=randDen();
-    const a=randInt(1,d*2-1),b=randInt(1,d);
+    const a=randNumer(d),b=randNumer(d);
     return fracEx(`${a}/${d} + ${b}/${d} = ?`, a+b, d);
   },
   // ── kivonás azonos nevező ────────────────────────────
   ()=>{
     const d=randDen();
-    const b=randInt(1,d-1),a=randInt(b+1,d*2);
-    return fracEx(`${a}/${d} − ${b}/${d} = ?`, a-b, d);
+    const a=randNumer(d),b=randNumer(d);
+    if(a===b)return null;
+    const [hi,lo]=[Math.max(a,b),Math.min(a,b)];
+    return fracEx(`${hi}/${d} − ${lo}/${d} = ?`, hi-lo, d);
   },
   // ── összeadás különböző nevező ───────────────────────
   ()=>{
     const d1=randDen(),d2=randChoice(DENS.filter(d=>d!==d1));
-    const a=randInt(1,d1*2-1),b=randInt(1,d2*2-1);
+    const a=randNumer(d1),b=randNumer(d2);
     const cd=lcm(d1,d2);
     return fracEx(`${a}/${d1} + ${b}/${d2} = ?`, a*(cd/d1)+b*(cd/d2), cd);
   },
   // ── kivonás különböző nevező ─────────────────────────
   ()=>{
     const d1=randDen(),d2=randChoice(DENS.filter(d=>d!==d1));
-    const a=randInt(1,d1*2),b=randInt(1,d2*2-1);
+    const a=randNumer(d1),b=randNumer(d2);
     const cd=lcm(d1,d2);
     const rn=a*(cd/d1)-b*(cd/d2);
-    if(rn<=0)return null; // retry
+    if(rn<=0)return null;
     return fracEx(`${a}/${d1} − ${b}/${d2} = ?`, rn, cd);
   },
   // ── szorzás egész számmal ────────────────────────────
